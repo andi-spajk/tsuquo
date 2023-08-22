@@ -1,11 +1,11 @@
-/* set.c
+/** set.c
 
 Sorted set. Internally represented as a linked list.
 
 */
 
 #include <stdbool.h>
-#include "stdlib.h"
+#include <stdlib.h>
 
 #include "set.h"
 

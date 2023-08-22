@@ -43,6 +43,7 @@ typedef struct Lexer {
 
 Lexer *init_lexer(void);
 void destroy_lexer(Lexer *lexer);
+
 int read_file(Lexer *lexer, const char *file_name);
 U8 get_char(Lexer *lexer);
 U8 lex(Lexer *lexer);

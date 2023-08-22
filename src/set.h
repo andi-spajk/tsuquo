@@ -1,4 +1,4 @@
-/* set.h
+/** set.h
 
 Module definition for generic sets.
 
@@ -39,6 +39,7 @@ Set *init_set(int (*compare)(const void *, const void *));
 void destroy_set(Set *set);
 Node *init_node(void *data);
 void destroy_node(Node *node);
+
 bool set_is_empty(Set *set);
 int set_insert(Set *set, void *element);
 void *set_find(Set *set, void *element);
