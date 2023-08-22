@@ -1,0 +1,5 @@
+obj/
+pseudo/
+main
+
+tests/lexer/test_lexer
