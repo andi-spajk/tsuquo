@@ -55,16 +55,16 @@ int read_file(Lexer *lexer, const char *file_name)
 
 	// determine file size in bytes
 	fseek(f, 0, SEEK_END);
-	int size = ftell(f);
+	int fsize = ftell(f);
 	rewind(f);
 
 	free(lexer->buffer);
-	lexer->buffer = malloc(size * sizeof(char));
+	lexer->buffer = malloc(fsize * sizeof(char));
 	if (!lexer->buffer)
 		return -1;
-	fread(lexer->buffer, 1, size, f);
+	fread(lexer->buffer, 1, fsize, f);
 
-	lexer->buffer_len = size;
+	lexer->buffer_len = fsize;
 	// don't forget to reset position
 	lexer->pos = 0;
 
