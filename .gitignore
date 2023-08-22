@@ -3,3 +3,4 @@ pseudo/
 main
 
 tests/lexer/test_lexer
+tests/set/test_set

@@ -10,7 +10,7 @@ Lexical analyzer for TSHazer.
 #include "lexer.h"
 
 /* init_lexer()
-	@return         ptr to dynamically allocated Lexer struct
+	@return         ptr to dynamically allocated Lexer struct, NULL if fail
 
 	Dynamically allocate a Lexer struct and initialize its default values.
 */
@@ -28,11 +28,12 @@ Lexer *init_lexer(void)
 /* destroy_lexer()
 	@lexer          ptr to Lexer struct
 
-	Free all the memory used by the Lexer.
+	Free a Lexer and its buffer from memory.
 */
 void destroy_lexer(Lexer *lexer)
 {
-	free(lexer->buffer);
+	if (lexer)
+		free(lexer->buffer);
 	free(lexer);
 }
 
