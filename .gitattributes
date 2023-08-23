@@ -1,0 +1,7 @@
+*.c text eol=lf
+*.h text eol=lf
+*.txt text eol=auto
+Makefile text eol=lf
+
+# everything else
+* text eol=auto

@@ -15,12 +15,6 @@ Sorted set. Internally represented as a linked list.
 	@return         ptr to dynamically allocated Set, NULL if fail
 
 	Dynamically allocate and initialize a Set struct and its members.
-
-	The @compare function should compare 2 elements that go in the set.
-	The return value should indicate the following:
-		>0      element1 goes after element2
-		=0      element1 equals element2
-		<0      element1 goes before element2
 */
 Set *init_set(int (*compare)(const void *, const void *))
 {
@@ -69,7 +63,7 @@ Node *init_node(void *data)
 }
 
 // for symmetry and to prevent confusion, a destroy_node() function is defined
-// the user need only call free(node), though
+// the user could always call free(node), though
 inline void destroy_node(Node *node)
 {
 	free(node);
@@ -92,7 +86,7 @@ bool set_is_empty(Set *set)
 	@element        ptr to element that will be inserted
 
 	@return         INSERT_SUCCESS if insertion is successful
-	                INSERT_DUPLICATE if item was a duplicate
+	                INSERT_DUPLICATE if element was a duplicate
 	                INSERT_ERROR otherwise
 
 	Insert an element into a set. If the element is a duplicate, the set is
@@ -150,7 +144,7 @@ int set_insert(Set *set, void *element)
 
 	@return         ptr to element if located, otherwise NULL
 
-	Find an element in a set.
+	Find and return an element in a set.
 */
 void *set_find(Set *set, void *element)
 {
@@ -168,7 +162,7 @@ void *set_find(Set *set, void *element)
 
 	@return         ptr to first element
 
-	Remove the first element of the set.
+	Remove and return the first element from the set.
 
 	Naming history: remove_tail --> chop_tail --> chop_head --> decapitate
 */
