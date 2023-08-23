@@ -131,3 +131,24 @@ U8 lex(Lexer *lexer)
 		}
 	}
 }
+
+/* print_error()
+	@lexer          ptr to Lexer
+	@msg            string containg an error message
+
+	Print an error message, the original regex, and an error arrow.
+*/
+void print_error(const Lexer *lexer, const char *msg)
+{
+	printf("ERROR: %s\n", msg);
+
+	// buffer isn't null-terminated
+	fwrite(lexer->buffer, 1, lexer->buffer_len, stdout);
+	putchar('\n');
+
+	// error arrow
+	// lexer->pos always sits one char ahead of the previously fetched token
+	for (int i = 0; i < lexer->pos-1; i++)
+		putchar(' ');
+	printf("^\n\n");
+}

@@ -65,6 +65,7 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_INT(0, read_file(lexer, "example.txt"));
 	tk = lex(lexer);
 	TEST_ASSERT_EQUAL_UINT8('a', tk);
+	print_error(lexer, "blblblblbl");
 	tk = lex(lexer);
 	TEST_ASSERT_EQUAL_UINT8(TK_LPAREN, tk);
 	tk = lex(lexer);
@@ -77,6 +78,7 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_UINT8(TK_RPAREN, tk);
 	tk = lex(lexer);
 	TEST_ASSERT_EQUAL_UINT8(TK_STAR, tk);
+	print_error(lexer, "fake error, expected '(' or smth lol");
 	tk = lex(lexer);
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, tk);
 
@@ -105,6 +107,7 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_UINT8('\\', tk);
 	tk = lex(lexer);
 	TEST_ASSERT_EQUAL_UINT8(TK_ILLEGAL, tk);
+	print_error(lexer, "unknown character");
 	tk = lex(lexer);
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, tk);
 	destroy_lexer(lexer);

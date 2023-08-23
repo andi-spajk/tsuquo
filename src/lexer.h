@@ -48,4 +48,6 @@ int read_file(Lexer *lexer, const char *file_name);
 U8 get_char(Lexer *lexer);
 U8 lex(Lexer *lexer);
 
+void print_error(const Lexer *lexer, const char *msg);
+
 #endif
