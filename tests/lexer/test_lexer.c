@@ -1,4 +1,5 @@
 #include "../../unity/unity.h"
+#include "common.h"
 #include "lexer.h"
 
 #define EXAMPLE1_LEN 7

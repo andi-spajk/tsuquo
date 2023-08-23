@@ -4,3 +4,4 @@ main
 
 tests/lexer/test_lexer
 tests/set/test_set
+tests/nfa/test_nfa

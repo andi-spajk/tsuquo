@@ -7,6 +7,7 @@ Lexical analyzer for TSHazer.
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "common.h"
 #include "lexer.h"
 
 /* init_lexer()

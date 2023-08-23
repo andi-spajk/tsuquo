@@ -7,22 +7,22 @@ CFLAGS += -I$(SRC)
 
 UNITY_SRC = ../../unity
 UNITY_DEP = $(OBJ)/unity.o
-DEP = $(addprefix $(OBJ)/,test_lexer.o lexer.o)
-HEADERS = $(addprefix $(SRC)/,lexer.h)
+DEP = $(addprefix $(OBJ)/,test_nfa.o nfa.o)# set.o)
+HEADERS = $(addprefix $(SRC)/,nfa.h)# set.h)
 
 .PHONY: all clean
 
-all: test_lexer
+all: test_nfa
 
 $(OBJ):
 	mkdir -p $@
 
-test_lexer: $(DEP) $(UNITY_DEP) $(HEADERS)
+test_nfa: $(DEP) $(UNITY_DEP) $(HEADERS)
 	$(CC) $(CFLAGS) $(DEP) $(UNITY_DEP) -o $@
 
-$(OBJ)/test_lexer.o: test_lexer.c | $(OBJ)
+$(OBJ)/test_nfa.o: test_nfa.c | $(OBJ)
 	$(CC) $(CFLAGS) -c $<
-	mv test_lexer.o $(OBJ)
+	mv test_nfa.o $(OBJ)
 
 $(UNITY_DEP): $(UNITY_SRC)/unity.c
 	$(CC) $(CFLAGS) -c $<
@@ -33,4 +33,4 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 	mv *.o $(OBJ)
 
 clean:
-	rm $(DEP) $(UNITY_DEP) test_lexer -rf
+	rm $(DEP) $(UNITY_DEP) test_nfa -rf

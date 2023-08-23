@@ -10,7 +10,7 @@ UNITY_DEP = $(OBJ)/unity.o
 DEP = $(addprefix $(OBJ)/,test_set.o set.o)
 HEADERS = $(addprefix $(SRC)/,set.h)
 
-.PHONY: all clean deepclean
+.PHONY: all clean
 
 all: test_set
 

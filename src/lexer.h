@@ -7,7 +7,7 @@ Module definition for lexical analysis.
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <stdint.h>
+#include "common.h"
 
 // tokens for special regex chars like ( * ? ] etc.
 #define TK_EOF          128
@@ -32,8 +32,6 @@ Full character mapping:
   [1,127]: regular ASCII (what the user enters)
 [128,255]: special tokens
 */
-
-typedef uint8_t U8;
 
 typedef struct Lexer {
 	char *buffer;

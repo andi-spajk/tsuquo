@@ -5,7 +5,7 @@ OBJ = obj
 SRC = src
 
 DEP = $(addprefix $(OBJ)/,main.o lexer.o)
-HEADERS = $(addprefix $(SRC)/,lexer.h)
+HEADERS = $(addprefix $(SRC)/,common.h lexer.h)
 
 .PHONY: all clean
 
