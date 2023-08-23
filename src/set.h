@@ -9,6 +9,10 @@ Module definition for generic sets.
 
 #include <stdbool.h>
 
+#define INSERT_SUCCESS    0
+#define INSERT_DUPLICATE  1
+#define INSERT_ERROR     -1
+
 typedef struct Node {
 	// ptr to an element in a set
 	void *data;
@@ -43,5 +47,8 @@ void destroy_node(Node *node);
 bool set_is_empty(Set *set);
 int set_insert(Set *set, void *element);
 void *set_find(Set *set, void *element);
+void *set_decapitate(Set *set);
+bool set_equals(Set *s1, Set *s2);
+Set *set_union(Set *lhs, Set *rhs);
 
 #endif

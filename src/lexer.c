@@ -59,7 +59,7 @@ int read_file(Lexer *lexer, const char *file_name)
 	rewind(f);
 
 	free(lexer->buffer);
-	lexer->buffer = malloc(fsize * sizeof(char));
+	lexer->buffer = malloc(fsize);
 	if (!lexer->buffer)
 		return -1;
 	fread(lexer->buffer, 1, fsize, f);

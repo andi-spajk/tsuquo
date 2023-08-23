@@ -33,7 +33,4 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 	mv *.o $(OBJ)
 
 clean:
-	rm $(DEP) test_lexer -rf
-
-deepclean:
-	rm $(DEP) test_lexer $(UNITY_DEP) -rf
+	rm $(DEP) $(UNITY_DEP) test_lexer -rf

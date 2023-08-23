@@ -33,7 +33,4 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 	mv *.o $(OBJ)
 
 clean:
-	rm $(DEP) test_set -rf
-
-deepclean:
-	rm $(DEP) test_set $(UNITY_DEP) -rf
+	rm $(DEP) $(UNITY_DEP) test_set -rf
