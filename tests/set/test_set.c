@@ -26,7 +26,7 @@ void test_init_node(void)
 {
 	int num = 123;
 	Node *node = init_node(&num);
-	TEST_ASSERT_EQUAL_PTR(node->data, &num);
+	TEST_ASSERT_EQUAL_PTR(node->element, &num);
 	TEST_ASSERT_NULL(node->next);
 	destroy_node(node);
 }
@@ -42,8 +42,8 @@ void test_set_insert(void)
 	int n1_again = 1;
 
 	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(set, &n1));
-	TEST_ASSERT_EQUAL_PTR(&n1, set->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n1, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n1, set->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n1, set->tail->element);
 	TEST_ASSERT_NULL(set->head->next);
 	TEST_ASSERT_NULL(set->tail->next);
 	TEST_ASSERT_EQUAL_INT(1, set->size);
@@ -51,32 +51,32 @@ void test_set_insert(void)
 
 	// insert before head
 	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(set, &n0));
-	TEST_ASSERT_EQUAL_PTR(&n0, set->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n1, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n0, set->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n1, set->tail->element);
 	TEST_ASSERT_EQUAL_PTR(set->head->next, set->tail);
 	TEST_ASSERT_EQUAL_INT(2, set->size);
 
 	// insert new tail
 	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(set, &n3));
-	TEST_ASSERT_EQUAL_PTR(&n0, set->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n0, set->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->element);
 	TEST_ASSERT_EQUAL_INT(3, set->size);
 
 	// insert in the middle
 	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(set, &n2));
-	TEST_ASSERT_EQUAL_PTR(&n0, set->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n1, set->head->next->data);
-	TEST_ASSERT_EQUAL_PTR(&n2, set->head->next->next->data);
-	TEST_ASSERT_EQUAL_PTR(&n3, set->head->next->next->next->data);
-	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n0, set->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n1, set->head->next->element);
+	TEST_ASSERT_EQUAL_PTR(&n2, set->head->next->next->element);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->head->next->next->next->element);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->element);
 	TEST_ASSERT_EQUAL_INT(4, set->size);
 
 	// insert duplicates
 	TEST_ASSERT_EQUAL_INT(INSERT_DUPLICATE, set_insert(set, &n3_again));
-	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->element);
 	TEST_ASSERT_EQUAL_INT(4, set->size);
 	TEST_ASSERT_EQUAL_INT(INSERT_DUPLICATE, set_insert(set, &n1_again));
-	TEST_ASSERT_EQUAL_PTR(&n1, set->head->next->data);
+	TEST_ASSERT_EQUAL_PTR(&n1, set->head->next->element);
 	TEST_ASSERT_EQUAL_INT(4, set->size);
 
 	destroy_set(set);
@@ -125,26 +125,26 @@ void test_set_decapitate(void)
 	TEST_ASSERT_EQUAL_INT(4, set->size);
 	TEST_ASSERT_FALSE(set_is_empty(set));
 
-	TEST_ASSERT_EQUAL_PTR(&n0, set->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n0, set->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->element);
 	TEST_ASSERT_EQUAL_PTR(&n0, set_decapitate(set));
 	TEST_ASSERT_EQUAL_INT(3, set->size);
 	TEST_ASSERT_FALSE(set_is_empty(set));
 
-	TEST_ASSERT_EQUAL_PTR(&n1, set->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n1, set->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->element);
 	TEST_ASSERT_EQUAL_PTR(&n1, set_decapitate(set));
 	TEST_ASSERT_EQUAL_INT(2, set->size);
 	TEST_ASSERT_FALSE(set_is_empty(set));
 
-	TEST_ASSERT_EQUAL_PTR(&n2, set->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n2, set->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->element);
 	TEST_ASSERT_EQUAL_PTR(&n2, set_decapitate(set));
 	TEST_ASSERT_EQUAL_INT(1, set->size);
 	TEST_ASSERT_FALSE(set_is_empty(set));
 
-	TEST_ASSERT_EQUAL_PTR(&n3, set->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n3, set->tail->element);
 	TEST_ASSERT_EQUAL_PTR(&n3, set_decapitate(set));
 	TEST_ASSERT_EQUAL_INT(0, set->size);
 	TEST_ASSERT_TRUE(set_is_empty(set));
@@ -212,9 +212,9 @@ void test_set_union(void)
 	//  s1 |= s2
 	// {0} |= {}
 	TEST_ASSERT_EQUAL_PTR(s1, set_union(s1, s2));
-	TEST_ASSERT_EQUAL_PTR(&n0, s1->head->data);
+	TEST_ASSERT_EQUAL_PTR(&n0, s1->head->element);
 	TEST_ASSERT_NULL(s1->head->next);
-	TEST_ASSERT_EQUAL_PTR(&n0, s1->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n0, s1->tail->element);
 	TEST_ASSERT_NULL(s1->tail->next);
 	TEST_ASSERT_EQUAL_INT(1, s1->size);
 	TEST_ASSERT_EQUAL_INT(0, s2->size);
@@ -230,8 +230,8 @@ void test_set_union(void)
 	TEST_ASSERT_EQUAL_PTR(s2, set_union(s2, s1));
 	TEST_ASSERT_EQUAL_INT(2, s1->size);
 	TEST_ASSERT_EQUAL_INT(2, s2->size);
-	TEST_ASSERT_EQUAL_PTR(&n0, s2->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n2, s2->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n0, s2->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n2, s2->tail->element);
 	TEST_ASSERT_TRUE(set_equals(s2, s1));
 
 	set_insert(s1, &n1);
@@ -240,8 +240,8 @@ void test_set_union(void)
 	// {0, 2} |= {0, 1, 2, 99}
 	TEST_ASSERT_EQUAL_PTR(s2, set_union(s2, s1));
 	TEST_ASSERT_TRUE(set_equals(s2, s1));
-	TEST_ASSERT_EQUAL_PTR(&n0, s2->head->data);
-	TEST_ASSERT_EQUAL_PTR(&n99, s2->tail->data);
+	TEST_ASSERT_EQUAL_PTR(&n0, s2->head->element);
+	TEST_ASSERT_EQUAL_PTR(&n99, s2->tail->element);
 	TEST_ASSERT_EQUAL_INT(4, s2->size);
 
 	// s1 |= s2
@@ -255,6 +255,31 @@ void test_set_union(void)
 	destroy_set(s2);
 }
 
+void test_iterators(void)
+{
+	Set *s = init_set(compare_ints);
+
+	int n4 = 4;
+	int n3 = 3;
+	int n2 = 2;
+	int n1 = 1;
+
+	set_insert(s, &n4);
+	set_insert(s, &n3);
+	set_insert(s, &n2);
+	set_insert(s, &n1);
+
+	int i = 1;
+	Iterator *it = set_begin(s);
+	for (; it; advance_iter(&it)) {
+		TEST_ASSERT_EQUAL_INT(i, *(int *)it->element);
+		i++;
+	}
+	TEST_ASSERT_NULL(it);
+
+	destroy_set(s);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -266,6 +291,7 @@ int main(void)
 	RUN_TEST(test_set_decapitate);
 	RUN_TEST(test_set_equals);
 	RUN_TEST(test_set_union);
+	RUN_TEST(test_iterators);
 
 	return UNITY_END();
 }

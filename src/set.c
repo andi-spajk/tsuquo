@@ -45,20 +45,20 @@ void destroy_set(Set *set)
 }
 
 /* init_node()
-	@data           element to insert into the set
+	@element        element to insert into the set
 
 	@return         ptr to dynamically allocated Node struct, NULL if fail
 
-	Dynamically allocate and initialize a Node struct and the user's data.
-	This data can be dynamically allocated. It is always the USER'S
-	responsibility to manage its memory and lifetime.
+	Dynamically allocate and initialize a Node struct and the user's
+	element. This element can be dynamically allocated. It is always the
+	USER'S responsibility to manage its memory and lifetime.
 */
-Node *init_node(void *data)
+Node *init_node(void *element)
 {
 	Node *node = calloc(1, sizeof(Node));
 	if (!node)
 		return NULL;
-	node->data = data;
+	node->element = element;
 	return node;
 }
 
@@ -108,7 +108,7 @@ int set_insert(Set *set, void *element)
 	Node *prev = NULL;
 	int cmp;
 	while (curr) {
-		cmp = (*set->compare)(curr->data, element);
+		cmp = (*set->compare)(curr->element, element);
 		if (cmp > 0) {
 			// insert element before curr
 			if (!prev) {
@@ -150,8 +150,8 @@ void *set_find(Set *set, void *element)
 {
 	Node *curr = set->head;
 	while (curr) {
-		if ((*set->compare)(curr->data, element) == 0)
-			return curr->data;
+		if ((*set->compare)(curr->element, element) == 0)
+			return curr->element;
 		curr = curr->next;
 	}
 	return NULL;
@@ -181,7 +181,7 @@ void *set_decapitate(Set *set)
 		set->head = new_head;
 	}
 
-	void *innards = decapitation->data;
+	void *innards = decapitation->element;
 	destroy_node(decapitation);
 	set->size--;
 	return innards;
@@ -195,7 +195,7 @@ void *set_decapitate(Set *set)
 	                false
 
 	Check 2 sets for equality: both sets have all the same elements with the
-	same data, no more and no less.
+	same element, no more and no less.
 */
 bool set_equals(Set *s1, Set *s2)
 {
@@ -207,7 +207,7 @@ bool set_equals(Set *s1, Set *s2)
 	Node *cmp1 = s1->head;
 	Node *cmp2 = s2->head;
 	while (cmp1 && cmp2) {
-		if ((*s1->compare)(cmp1->data, cmp2->data) != 0)
+		if ((*s1->compare)(cmp1->element, cmp2->element) != 0)
 			return false;
 		cmp1 = cmp1->next;
 		cmp2 = cmp2->next;
@@ -233,9 +233,43 @@ Set *set_union(Set *lhs, Set *rhs)
 	// working solution but not a smart solution
 	Node *curr = rhs->head;
 	while (curr) {
-		if (set_insert(lhs, curr->data) == INSERT_ERROR)
+		if (set_insert(lhs, curr->element) == INSERT_ERROR)
 			return NULL;
 		curr = curr->next;
 	}
 	return lhs;
+}
+
+/* set_begin()
+	@set            ptr to Set struct
+
+	@return         Set iterator
+
+	Return an iterator of the Set. To access the element, the user should
+	dereference the iterator.
+*/
+Iterator *set_begin(Set *set)
+{
+	if (set)
+		return set->head;
+	return NULL;
+}
+
+/* advance_iter()
+	@it             ptr to Set iterator (double ptr)
+
+	@return         the iterator advanced by one element, NULL if no more
+
+	Advance an iterator to the next element. Modifies the user's original
+	iterator.
+*/
+Iterator *advance_iter(Iterator **it)
+{
+	if (it) {
+		if (*it) {
+			*it = (*it)->next;
+			return *it;
+		}
+	}
+	return NULL;
 }

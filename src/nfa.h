@@ -8,12 +8,13 @@ Module definition for nondeterministic finite automata.
 #define NFA_H
 
 #include "common.h"
+#include "set.h"
 
 typedef struct NFAState {
 	struct NFAState *out1;
 	struct NFAState *out2;
 	U8 ch;
-	int index;
+	int index;  // should be DISREGARDED until index_states() is called!!!
 } NFAState;
 
 typedef struct NFA {
@@ -22,17 +23,17 @@ typedef struct NFA {
 	U64 alphabet0_63;  // store alphabet as a bitfield
 	U64 alphabet64_127;
 	int size;
+	Set *mem_region;  // set of all of ptrs to NFAStates in the NFA
+	                  // this region-based system simplifies cleanup of
+	                  // NFAStates
 } NFA;
-
-/*
-NFA->size and NFAState->index should be DISREGARDED until index_states() is
-called!!!
-*/
 
 NFAState *init_nfastate(void);
 void destroy_nfastate(NFAState *state);
+int compare_nfastate_ptr(const void *n1, const void *n2);
 NFA *init_nfa(void);
 void destroy_nfa(NFA *nfa);
+void destroy_nfa_and_states(NFA *nfa);
 NFA *init_thompson_nfa(U8 ch);
 
 #endif

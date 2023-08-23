@@ -9,6 +9,7 @@ expressions.
 
 #include "common.h"
 #include "nfa.h"
+#include "set.h"
 
 /* init_nfastate()
 	@return         ptr to dynamically allocated NFAState, NULL if fail
@@ -32,6 +33,22 @@ inline void destroy_nfastate(NFAState *state)
 	free(state);
 }
 
+/* compare_nfastate_ptr()
+	@n1             ptr to an NFAState struct
+	@n2             ptr to an NFAState struct
+
+	@return         any value indicating the following:
+	                >0      n1's address goes after n2
+	                =0      same NFAState (the only practical result)
+	                <0      n1's address goes before n2
+
+	Check whether two NFAStates are the same state.
+*/
+int compare_nfastate_ptr(const void *n1, const void *n2)
+{
+	return (NFAState *)n1 - (NFAState *)n2;
+}
+
 /* init_nfa()
 	@return         ptr to dynamically allocated NFA, NULL if fail
 
@@ -42,19 +59,43 @@ NFA *init_nfa(void)
 	NFA *nfa = calloc(1, sizeof(NFA));
 	if (!nfa)
 		return NULL;
-	// everything is zero-initialized
+	nfa->mem_region = init_set(compare_nfastate_ptr);
+	if (!nfa->mem_region) {
+		free(nfa);
+		return NULL;
+	}
 	return nfa;
 }
 
-/* destroy_nfa()
+/* destroy_nfa
 	@nfa            ptr to NFA struct
 
-	Shallow destroy an NFA. Constituent states are not traversed nor
-	destroyed.
+	Free all the memory holding the NFA struct and the saved memory region.
+	The actual contents of that region-based memory (ie the NFAStates
+	themselves) are unfreed.
 */
-inline void destroy_nfa(NFA *nfa)
+void destroy_nfa(NFA *nfa)
 {
+	if (!nfa)
+		return;
+	destroy_set(nfa->mem_region);
 	free(nfa);
+}
+
+/* destroy_nfa_and_states()
+	@nfa            ptr to NFA struct
+
+	Free all the memory used by NFA. Constituent states are also freed.
+*/
+void destroy_nfa_and_states(NFA *nfa)
+{
+	if (!nfa)
+		return;
+
+	Iterator *it = set_begin(nfa->mem_region);
+	for (; it; advance_iter(&it))
+		destroy_nfastate(it->element);
+	destroy_nfa(nfa);
 }
 
 /* init_thompson_nfa()
@@ -76,6 +117,8 @@ NFA *init_thompson_nfa(U8 ch)
 		destroy_nfa(nfa);
 		return NULL;
 	}
+	set_insert(nfa->mem_region, start);
+	set_insert(nfa->mem_region, accept);
 
 	start->ch = ch;
 	start->out1 = accept;
