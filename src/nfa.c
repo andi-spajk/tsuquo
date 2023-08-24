@@ -43,6 +43,11 @@ inline void destroy_nfastate(NFAState *state)
 	                <0      n1's address goes before n2
 
 	Check whether two NFAStates are the same state.
+
+	Equality is the only practical result since we don't care whether the
+	states in the NFA memory region are sorted. When we free them, we must
+	iterate through all of them. Who cares about the order, as long as we
+	free all of them and perform no double frees.
 */
 int compare_nfastate_ptr(const void *n1, const void *n2)
 {
@@ -130,4 +135,70 @@ NFA *init_thompson_nfa(U8 ch)
 		nfa->alphabet64_127 |= (1ULL << (ch-64));
 	nfa->size = 2;
 	return nfa;
+}
+
+/* nfa_union()
+	@lhs            ptr to NFA struct
+	@rhs            ptr to another NFA struct
+
+	@return         ptr to modified @lhs, NULL if fail
+
+	Perform the Thompson construction for the union of 2 NFAs. Original @lhs
+	is modified and @rhs is destroyed.
+*/
+NFA *nfa_union(NFA *lhs, NFA *rhs)
+{
+	NFAState *new_accept = init_nfastate();
+	NFAState *new_start = init_nfastate();
+
+	new_start->out1 = lhs->start;
+	new_start->out2 = rhs->start;
+	lhs->accept->out1 = new_accept;
+	rhs->accept->out1 = new_accept;
+	lhs->start = new_start;
+	lhs->accept = new_accept;
+
+	// rhs brings new symbols to the alphabet
+	lhs->alphabet0_63 |= rhs->alphabet0_63;
+	lhs->alphabet64_127 |= rhs->alphabet64_127;
+
+	lhs->size += 2;
+	lhs->size += rhs->size;
+
+	if (!set_union(lhs->mem_region, rhs->mem_region)) {
+		destroy_nfastate(new_accept);
+		destroy_nfastate(new_start);
+		return NULL;
+	}
+	set_insert(lhs->mem_region, new_accept);
+	set_insert(lhs->mem_region, new_start);
+	destroy_nfa(rhs);
+	return lhs;
+}
+
+/* nfa_append()
+	@lhs            ptr to NFA struct
+	@rhs            ptr to another NFA struct
+
+	@return         ptr to modified @lhs, NULL if fail
+
+	Perform the Thompson construction for the concatenation of 2 NFAs.
+	Original @lhs is modified and @rhs is destroyed.
+*/
+NFA *nfa_append(NFA *lhs, NFA *rhs)
+{
+	lhs->accept->out1 = rhs->start;
+	// `lhs->accept`'s epsilon transition is still there
+	// now reassign accept
+	lhs->accept = rhs->accept;
+
+	lhs->size += rhs->size;
+
+	lhs->alphabet0_63 |= rhs->alphabet0_63;
+	lhs->alphabet64_127 |= rhs->alphabet64_127;
+
+	if (!set_union(lhs->mem_region, rhs->mem_region))
+		return NULL;
+	destroy_nfa(rhs);
+	return lhs;
 }

@@ -66,7 +66,7 @@ bool set_is_empty(Set *set);
 int set_insert(Set *set, void *element);
 void *set_find(Set *set, void *element);
 void *set_decapitate(Set *set);
-bool set_equals(Set *s1, Set *s2);
+bool set_equals(Set *lhs, Set *rhs);
 Set *set_union(Set *lhs, Set *rhs);
 
 Iterator *set_begin(Set *set);

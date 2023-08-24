@@ -188,8 +188,8 @@ void *set_decapitate(Set *set)
 }
 
 /* set_equals()
-	@s1             ptr to Set struct
-	@s2             ptr to another Set struct
+	@lhs            ptr to Set struct
+	@rhs            ptr to another Set struct
 
 	@return         true if both sets have identical elements, otherwise
 	                false
@@ -197,23 +197,23 @@ void *set_decapitate(Set *set)
 	Check 2 sets for equality: both sets have all the same elements with the
 	same element, no more and no less.
 */
-bool set_equals(Set *s1, Set *s2)
+bool set_equals(Set *lhs, Set *rhs)
 {
-	if (s1->size != s2->size)
+	if (lhs->size != rhs->size)
 		return false;
-	else if (s1->compare != s2->compare)
+	else if (lhs->compare != rhs->compare)
 		return false;
 
-	Node *cmp1 = s1->head;
-	Node *cmp2 = s2->head;
-	while (cmp1 && cmp2) {
-		if ((*s1->compare)(cmp1->element, cmp2->element) != 0)
+	Node *lcmp = lhs->head;
+	Node *rcmp = rhs->head;
+	while (lcmp && rcmp) {
+		if ((*lhs->compare)(lcmp->element, rcmp->element) != 0)
 			return false;
-		cmp1 = cmp1->next;
-		cmp2 = cmp2->next;
+		lcmp = lcmp->next;
+		rcmp = rcmp->next;
 	}
 	// exhausted both lists
-	return !cmp1 && !cmp2;
+	return !lcmp && !rcmp;
 }
 
 /* set_union()
@@ -233,6 +233,9 @@ Set *set_union(Set *lhs, Set *rhs)
 	// working solution but not a smart solution
 	Node *curr = rhs->head;
 	while (curr) {
+		// set_insert will make new nodes in lhs and copy the elements
+		// this prevents double frees in case user destroys both lhs and
+		// rhs
 		if (set_insert(lhs, curr->element) == INSERT_ERROR)
 			return NULL;
 		curr = curr->next;
