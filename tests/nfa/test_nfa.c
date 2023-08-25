@@ -305,6 +305,21 @@ void test_index_states_and_gen_graphviz(void)
 	destroy_nfa_and_states(regex);
 }
 
+void test_graphviz_other_quantifiers(void)
+{
+	// @+
+	NFA *at = init_thompson_nfa('@');
+	at = transform(at, '+');
+	gen_nfa_graphviz(at, "atplus.dot");
+	destroy_nfa_and_states(at);
+
+	// &?
+	NFA *maybe_and = init_thompson_nfa('&');
+	maybe_and = transform(maybe_and, '?');
+	gen_nfa_graphviz(maybe_and, "maybe_and.dot");
+	destroy_nfa_and_states(maybe_and);
+}
+
 void test_epsilon_closure(void)
 {
 	// a(b|c)*
@@ -353,6 +368,7 @@ int main(void)
 	RUN_TEST(test_nfa_append);
 	RUN_TEST(test_transform);
 	RUN_TEST(test_index_states_and_gen_graphviz);
+	RUN_TEST(test_graphviz_other_quantifiers);
 	RUN_TEST(test_epsilon_closure);
 
 	return UNITY_END();
