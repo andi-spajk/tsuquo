@@ -13,3 +13,5 @@ tests/nfa/a_or_b.dot
 tests/nfa/a_or_b.svg
 tests/nfa/a_or_b_closure.dot
 tests/nfa/a_or_b_closure.svg
+tests/nfa/cooper_torczon_example2.5.dot
+tests/nfa/cooper_torczon_example2.5.svg

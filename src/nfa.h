@@ -45,7 +45,10 @@ NFA *init_thompson_nfa(U8 ch);
 NFA *nfa_union(NFA *lhs, NFA *rhs);
 NFA *nfa_append(NFA *lhs, NFA *rhs);
 NFA *transform(NFA *nfa, U8 quantifier);
+
 int index_states(NFA *nfa);
 int gen_nfa_graphviz(NFA *nfa, const char *file_name);
+int compare_nfa_states(const void *s1, const void *s2);
+Set *epsilon_closure(NFAState *state);
 
 #endif

@@ -305,6 +305,44 @@ void test_index_states_and_gen_graphviz(void)
 	destroy_nfa_and_states(regex);
 }
 
+void test_epsilon_closure(void)
+{
+	// a(b|c)*
+	NFA *b = init_thompson_nfa('b');
+	TEST_ASSERT_NOT_NULL(b);
+
+	NFA *c = init_thompson_nfa('c');
+	TEST_ASSERT_NOT_NULL(c);
+
+	NFA *regex = nfa_union(b, c);
+	TEST_ASSERT_NOT_NULL(regex);
+
+	regex = transform(regex, '*');
+	TEST_ASSERT_NOT_NULL(regex);
+
+	NFA *a = init_thompson_nfa('a');
+	TEST_ASSERT_NOT_NULL(a);
+
+	regex = nfa_append(a, regex);
+	TEST_ASSERT_NOT_NULL(regex);
+	gen_nfa_graphviz(regex, "cooper_torczon_example2.5.dot");
+
+	TEST_ASSERT_EQUAL_UINT8('a', regex->start->ch);
+	Set *eps = epsilon_closure(regex->start->out1);
+	TEST_ASSERT_NOT_NULL(eps);
+	TEST_ASSERT_EQUAL_INT(6, eps->size);
+
+	int expected[] = {1, 2, 3, 4, 7, 8};
+	Iterator *it = set_begin(eps);
+	for (int i = 0; it; i++) {
+		TEST_ASSERT_EQUAL_INT(expected[i], ((NFAState *)it->element)->index);
+		advance_iter(&it);
+	}
+
+	destroy_nfa_and_states(regex);
+	destroy_set(eps);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -315,6 +353,7 @@ int main(void)
 	RUN_TEST(test_nfa_append);
 	RUN_TEST(test_transform);
 	RUN_TEST(test_index_states_and_gen_graphviz);
+	RUN_TEST(test_epsilon_closure);
 
 	return UNITY_END();
 }
