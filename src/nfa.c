@@ -150,6 +150,11 @@ NFA *nfa_union(NFA *lhs, NFA *rhs)
 {
 	NFAState *new_accept = init_nfastate();
 	NFAState *new_start = init_nfastate();
+	if (!(new_accept || new_start)) {
+		destroy_nfastate(new_accept);
+		destroy_nfastate(new_start);
+		return NULL;
+	}
 
 	new_start->out1 = lhs->start;
 	new_start->out2 = rhs->start;
@@ -201,4 +206,60 @@ NFA *nfa_append(NFA *lhs, NFA *rhs)
 		return NULL;
 	destroy_nfa(rhs);
 	return lhs;
+}
+
+/* transform()
+	@nfa            ptr to NFA struct
+	@quantifier     regex quantifier
+
+	@return         ptr to modified @nfa, NULL if fail
+
+	Apply a Thompson transformation for a regex quantifier: *, ?, +
+	Original @nfa is modified.
+*/
+NFA *transform(NFA *nfa, U8 quantifier)
+{
+	NFAState *new_accept = init_nfastate();
+	NFAState *new_start = init_nfastate();
+	if (!(new_accept || new_start)) {
+		destroy_nfastate(new_accept);
+		destroy_nfastate(new_start);
+		return NULL;
+	}
+	set_insert(nfa->mem_region, new_accept);
+	set_insert(nfa->mem_region, new_start);
+
+	if (quantifier == '*') {
+		nfa->accept->out2 = nfa->start; // the pattern cycles back to
+		                                // itself
+
+		nfa->accept->out1 = new_accept; // new accept state
+		nfa->accept = new_accept;
+
+		new_start->out1 = nfa->start;   // new start state
+		nfa->start = new_start;
+
+		nfa->start->out2 = nfa->accept; // maybe skip pattern
+	} else if (quantifier == '?') {
+		nfa->accept->out1 = new_accept; // new accept state
+		nfa->accept = new_accept;
+
+		new_start->out1 = nfa->start;   // new start state
+		nfa->start = new_start;
+
+		nfa->start->out2 = nfa->accept; // maybe skip pattern
+	} else if (quantifier == '+') {
+		nfa->accept->out2 = nfa->start; // the pattern cycles back to
+		                                // itself
+
+		nfa->accept->out1 = new_accept; // new accept state
+		nfa->accept = new_accept;
+
+		new_start->out1 = nfa->start;   // new start state
+		nfa->start = new_start;
+	} else {
+		return NULL;
+	}
+	nfa->size += 2;
+	return nfa;
 }

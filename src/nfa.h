@@ -41,5 +41,6 @@ void destroy_nfa_and_states(NFA *nfa);
 NFA *init_thompson_nfa(U8 ch);
 NFA *nfa_union(NFA *lhs, NFA *rhs);
 NFA *nfa_append(NFA *lhs, NFA *rhs);
+NFA *transform(NFA *nfa, U8 quantifier);
 
 #endif

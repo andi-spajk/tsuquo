@@ -81,22 +81,33 @@ void test_nfa_union(void)
 	TEST_ASSERT_EQUAL_UINT64(new_alphabet, regex->alphabet64_127);
 	TEST_ASSERT_EQUAL_INT(6, regex->size);
 
-	TEST_ASSERT_EQUAL_UINT8(EPSILON, regex->start->ch);
-	TEST_ASSERT_NOT_NULL(regex->start->out1);
-	TEST_ASSERT_NOT_NULL(regex->start->out2);
-	TEST_ASSERT_EQUAL_UINT8('a', regex->start->out1->ch);
-	TEST_ASSERT_EQUAL_UINT8('b', regex->start->out2->ch);
-	TEST_ASSERT_NULL(regex->start->out1->out2);
-	TEST_ASSERT_NULL(regex->start->out2->out2);
+	NFAState *curr = regex->start;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_NOT_NULL(curr->out1);
+	TEST_ASSERT_NOT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
 
-	NFAState *a_accept = regex->start->out1->out1;
-	NFAState *b_accept = regex->start->out2->out1;
-	TEST_ASSERT_EQUAL_UINT8(EPSILON, a_accept->ch);
-	TEST_ASSERT_EQUAL_UINT8(EPSILON, b_accept->ch);
-	TEST_ASSERT_EQUAL_PTR(regex->accept, a_accept->out1);
-	TEST_ASSERT_NULL(a_accept->out2);
-	TEST_ASSERT_EQUAL_PTR(regex->accept, b_accept->out1);
-	TEST_ASSERT_NULL(b_accept->out2);
+	// 'a' path
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8('a', curr->ch);
+	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_EQUAL_PTR(regex->accept, curr->out1);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	// go back to 'b' path
+	curr = regex->start->out2;
+	TEST_ASSERT_EQUAL_UINT8('b', curr->ch);
+	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_EQUAL_PTR(regex->accept, curr->out1);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
 
 	destroy_nfa_and_states(regex);
 }
@@ -118,22 +129,148 @@ void test_nfa_append(void)
 	TEST_ASSERT_EQUAL_UINT8('x', curr->ch);
 	TEST_ASSERT_NOT_NULL(curr->out1);
 	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
 
 	curr = curr->out1;
 	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
 	TEST_ASSERT_NOT_NULL(curr->out1);
 	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
 
 	curr = curr->out1;
 	TEST_ASSERT_EQUAL_UINT8('y', curr->ch);
 	TEST_ASSERT_NOT_NULL(curr->out1);
 	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
 
 	curr = curr->out1;
 	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
 	TEST_ASSERT_NULL(curr->out1);
 	TEST_ASSERT_NULL(curr->out2);
 	TEST_ASSERT_EQUAL_PTR(regex->accept, curr);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	destroy_nfa_and_states(regex);
+}
+
+void test_transform(void)
+{
+	NFA *regex = init_thompson_nfa('$');
+	TEST_ASSERT_NOT_NULL(regex);
+
+	regex = transform(regex, '*');
+	TEST_ASSERT_NOT_NULL(regex);
+	TEST_ASSERT_EQUAL_UINT64((1ULL << '$'), regex->alphabet0_63);
+	TEST_ASSERT_EQUAL_UINT64(0, regex->alphabet64_127);
+	TEST_ASSERT_EQUAL_INT(4, regex->size);
+
+	NFAState *curr = regex->start;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_EQUAL_PTR(regex->accept, curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8('$', curr->ch);
+	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_NOT_NULL(curr->out1);
+	TEST_ASSERT_EQUAL_PTR(regex->start->out1, curr->out2);
+	TEST_ASSERT_NOT_NULL(curr->out2);
+	TEST_ASSERT_EQUAL_PTR(regex->accept, curr->out1);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	destroy_nfa_and_states(regex);
+
+
+	regex = init_thompson_nfa('w');
+	TEST_ASSERT_NOT_NULL(regex);
+
+	regex = transform(regex, '?');
+	TEST_ASSERT_NOT_NULL(regex);
+	TEST_ASSERT_EQUAL_UINT64(0, regex->alphabet0_63);
+	TEST_ASSERT_EQUAL_UINT64((1ULL << ('w'-64)), regex->alphabet64_127);
+	TEST_ASSERT_EQUAL_INT(4, regex->size);
+
+	curr = regex->start;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_NOT_NULL(curr->out1);
+	TEST_ASSERT_NOT_NULL(curr->out2);
+	TEST_ASSERT_EQUAL_PTR(regex->accept, curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8('w', curr->ch);
+	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_NOT_NULL(curr->out1);
+	TEST_ASSERT_EQUAL_PTR(regex->accept, curr->out1);
+	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	destroy_nfa_and_states(regex);
+
+
+	regex = init_thompson_nfa(' ');
+	TEST_ASSERT_NOT_NULL(regex);
+
+	regex = transform(regex, '+');
+	TEST_ASSERT_NOT_NULL(regex);
+	TEST_ASSERT_NOT_NULL(regex);
+	TEST_ASSERT_EQUAL_UINT64((1ULL << ' '), regex->alphabet0_63);
+	TEST_ASSERT_EQUAL_UINT64(0, regex->alphabet64_127);
+	TEST_ASSERT_EQUAL_INT(4, regex->size);
+
+	curr = regex->start;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8(' ', curr->ch);
+	TEST_ASSERT_NULL(curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_EQUAL_UINT8(EPSILON, curr->ch);
+	TEST_ASSERT_NOT_NULL(curr->out1);
+	TEST_ASSERT_EQUAL_PTR(regex->start->out1, curr->out2);
+	TEST_ASSERT_NOT_NULL(curr->out2);
+	TEST_ASSERT_EQUAL_PTR(regex->accept, curr->out1);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	destroy_nfa_and_states(regex);
+
+	// (a|b)*
+	NFA *a = init_thompson_nfa('a');
+	NFA *b = init_thompson_nfa('b');
+	TEST_ASSERT_NOT_NULL(a);
+	TEST_ASSERT_NOT_NULL(b);
+	regex = nfa_union(a, b);
+	TEST_ASSERT_NOT_NULL(regex);
+	regex = transform(regex, '*');
+	TEST_ASSERT_NOT_NULL(regex);
+
+	TEST_ASSERT_EQUAL_UINT64(0, regex->alphabet0_63);
+	TEST_ASSERT_EQUAL_UINT64(((1ULL << ('a'-64)) | (1ULL << ('b'-64))), regex->alphabet64_127);
+	TEST_ASSERT_EQUAL_INT(8, regex->size);
+
+	curr = regex->start;
+	TEST_ASSERT_EQUAL_PTR(regex->accept, curr->out2);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	curr = curr->out1;
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+	TEST_ASSERT_EQUAL_UINT8('a', curr->out1->ch);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr->out1));
+	TEST_ASSERT_EQUAL_UINT8('b', curr->out2->ch);
+	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr->out2));
+	TEST_ASSERT_EQUAL_PTR(curr, curr->out1->out1->out1->out2); // cycle back
 
 	destroy_nfa_and_states(regex);
 }
@@ -146,6 +283,7 @@ int main(void)
 	RUN_TEST(test_init_thompson_nfa);
 	RUN_TEST(test_nfa_union);
 	RUN_TEST(test_nfa_append);
+	RUN_TEST(test_transform);
 
 	return UNITY_END();
 }
