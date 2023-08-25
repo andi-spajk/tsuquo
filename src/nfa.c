@@ -219,7 +219,7 @@ NFA *nfa_append(NFA *lhs, NFA *rhs)
 
 /* transform()
 	@nfa            ptr to NFA struct
-	@quantifier     regex quantifier
+	@quantifier     regex quantifier character
 
 	@return         ptr to modified @nfa, NULL if fail
 
