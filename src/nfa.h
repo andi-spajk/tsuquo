@@ -1,11 +1,13 @@
 /** nfa.h
 
-Module definition for nondeterministic finite automata.
+Module definition for Thompson nondeterministic finite automata.
 
 */
 
 #ifndef NFA_H
 #define NFA_H
+
+#include <stdbool.h>
 
 #include "common.h"
 #include "set.h"
@@ -18,6 +20,7 @@ typedef struct NFAState {
 	struct NFAState *out2;
 	U8 ch;
 	int index;  // should be DISREGARDED until index_states() is called!!!
+	bool seen;
 } NFAState;
 
 typedef struct NFA {
@@ -42,5 +45,7 @@ NFA *init_thompson_nfa(U8 ch);
 NFA *nfa_union(NFA *lhs, NFA *rhs);
 NFA *nfa_append(NFA *lhs, NFA *rhs);
 NFA *transform(NFA *nfa, U8 quantifier);
+int index_states(NFA *nfa);
+int gen_nfa_graphviz(NFA *nfa, const char *file_name);
 
 #endif

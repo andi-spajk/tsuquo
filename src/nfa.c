@@ -5,11 +5,16 @@ expressions.
 
 */
 
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "common.h"
 #include "nfa.h"
 #include "set.h"
+
+// to recursively enumerate every NFA state
+static int state_index = 0;
 
 /* init_nfastate()
 	@return         ptr to dynamically allocated NFAState, NULL if fail
@@ -21,7 +26,10 @@ NFAState *init_nfastate(void)
 	NFAState *state = calloc(1, sizeof(NFAState));
 	if (!state)
 		return NULL;
+	// -1 is a sentinel
 	state->index = -1;
+	// not sure if calloc automatically fulfills this
+	state->seen = false;
 	return state;
 }
 
@@ -262,4 +270,128 @@ NFA *transform(NFA *nfa, U8 quantifier)
 	}
 	nfa->size += 2;
 	return nfa;
+}
+
+/* reset_states()
+	@nfa            ptr to NFA struct
+
+	Tag all of the NFA's states to have index -1 and flag the state as
+	unseen.
+*/
+static void reset_states(NFA *nfa)
+{
+	state_index = 0;
+	for (Iterator *it = set_begin(nfa->mem_region); it; advance_iter(&it)) {
+		((NFAState *)(it->element))->index = -1;
+		((NFAState *)(it->element))->seen = false;
+	}
+}
+
+/* index_helper()
+	@state          ptr to NFA state
+
+	Recursively enumerate all NFA states.
+*/
+static void index_helper(NFAState *state)
+{
+	if (state->out1) {
+		// only recurse if state has not already been tagged with a
+		// meaningful index
+		if (state->out1->index == -1) {
+			state_index++;
+			state->out1->index = state_index;
+			index_helper(state->out1);
+		}
+	}
+	if (state->out2) {
+		if (state->out2->index == -1) {
+			state_index++;
+			state->out2->index = state_index;
+			index_helper(state->out2);
+		}
+	}
+	return;
+}
+
+/* index_states()
+	@nfa            ptr to NFA struct
+
+	@return         index of the last NFA state that was tagged
+
+	Enumerate every state in an NFA.
+*/
+int index_states(NFA *nfa)
+{
+	reset_states(nfa);
+	nfa->start->index = state_index;
+	index_helper(nfa->start);
+	return state_index;
+}
+
+/* graphviz_helper()
+	@state          ptr to NFA state
+	@f              output file
+
+	Recursively print the Graphviz DOT representation for every transition
+	in an NFA.
+*/
+static void graphviz_helper(NFAState *state, FILE *f)
+{
+	state->seen = true;
+	if (state->out1) {
+		fprintf(f, "\tn%d", state->index);
+		fprintf(f, " ->");
+		fprintf(f, " n%d", state->out1->index);
+		if (state->ch == EPSILON)
+			fprintf(f, " [label=\"&epsilon;\"]\n");
+		else
+			fprintf(f, " [label=\"%c\"]\n", state->ch);
+		// we printed transition, but only perform the transition if the
+		// out state hasn't been tagged as seen
+		if (!state->out1->seen)
+			graphviz_helper(state->out1, f);
+	}
+	if (state->out2) {
+		fprintf(f, "\tn%d", state->index);
+		fprintf(f, " ->");
+		fprintf(f, " n%d", state->out2->index);
+		// out2 is always an epsilon transition because any non-epsilon
+		// transition goes to out1 by default
+		fprintf(f, " [label=\"&epsilon;\"]\n");
+		if (!state->out2->seen)
+			graphviz_helper(state->out2, f);
+	}
+	return;
+}
+
+/* gen_nfa_graphviz()
+	@nfa            ptr to NFA struct
+	@file_name      name of output file
+
+	@return         0 if success, otherwise -1
+
+	Print the Graphviz DOT representation of an entire NFA to a file.
+*/
+int gen_nfa_graphviz(NFA *nfa, const char *file_name)
+{
+	index_states(nfa);
+	FILE *f = fopen(file_name, "w");
+	if (!f)
+		return -1;
+
+	fprintf(f, "digraph NFA {\n");
+	fprintf(f, "\tfontname = \"Helvetica,Arial,sans-serif\";\n");
+	fprintf(f, "\tnode [fontname=\"Helvetica,Arial,sans-serif\"];\n");
+	fprintf(f, "\tedge [fontname=\"Helvetica,Arial,sans-serif\"];\n");
+	fprintf(f, "\trankdir = LR;\n");
+
+	fprintf(f, "\tnode [shape=doublecircle]");
+	fprintf(f, " n%d;\n", nfa->accept->index);
+
+	fprintf(f, "\tnode [shape=circle];\n");
+	graphviz_helper(nfa->start, f);
+	fprintf(f, "}\n");
+
+	fclose(f);
+	return 0;
 }

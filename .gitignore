@@ -5,3 +5,11 @@ main
 tests/lexer/test_lexer
 tests/set/test_set
 tests/nfa/test_nfa
+tests/nfa/a.dot
+tests/nfa/a.svg
+tests/nfa/b.dot
+tests/nfa/b.svg
+tests/nfa/a_or_b.dot
+tests/nfa/a_or_b.svg
+tests/nfa/a_or_b_closure.dot
+tests/nfa/a_or_b_closure.svg

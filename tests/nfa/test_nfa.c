@@ -14,6 +14,7 @@ void test_inits(void)
 	TEST_ASSERT_NULL(state->out2);
 	TEST_ASSERT_EQUAL_INT(EPSILON, state->ch);
 	TEST_ASSERT_EQUAL_INT(-1, state->index);
+	TEST_ASSERT_FALSE(state->seen);
 
 	TEST_ASSERT_NULL(nfa->start);
 	TEST_ASSERT_NULL(nfa->accept);
@@ -275,6 +276,35 @@ void test_transform(void)
 	destroy_nfa_and_states(regex);
 }
 
+void test_index_states_and_gen_graphviz(void)
+{
+	// a
+	NFA *a = init_thompson_nfa('a');
+	TEST_ASSERT_NOT_NULL(a);
+	TEST_ASSERT_EQUAL_INT(a->size, index_states(a)+1);
+	gen_nfa_graphviz(a, "a.dot");
+
+	// b
+	NFA *b = init_thompson_nfa('b');
+	TEST_ASSERT_NOT_NULL(b);
+	TEST_ASSERT_EQUAL_INT(b->size, index_states(b)+1);
+	gen_nfa_graphviz(b, "b.dot");
+
+	// a|b
+	NFA *regex = nfa_union(a, b);
+	TEST_ASSERT_NOT_NULL(regex);
+	TEST_ASSERT_EQUAL_INT(regex->size, index_states(regex)+1);
+	gen_nfa_graphviz(regex, "a_or_b.dot");
+
+	// (a|b)*
+	regex = transform(regex, '*');
+	TEST_ASSERT_NOT_NULL(regex);
+	TEST_ASSERT_EQUAL_INT(regex->size, index_states(regex)+1);
+	gen_nfa_graphviz(regex, "a_or_b_closure.dot");
+
+	destroy_nfa_and_states(regex);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -284,6 +314,7 @@ int main(void)
 	RUN_TEST(test_nfa_union);
 	RUN_TEST(test_nfa_append);
 	RUN_TEST(test_transform);
+	RUN_TEST(test_index_states_and_gen_graphviz);
 
 	return UNITY_END();
 }
