@@ -1,6 +1,6 @@
 /** lexer.h
 
-Module definition for lexical analysis.
+Module definition for the lexical analyzer.
 
 */
 
@@ -8,6 +8,7 @@ Module definition for lexical analysis.
 #define LEXER_H
 
 #include "common.h"
+#include "control.h"
 
 // tokens for special regex chars like ( * ? ] etc.
 #define TK_EOF          128
@@ -33,19 +34,8 @@ Full character mapping:
 [128,255]: special tokens
 */
 
-typedef struct Lexer {
-	char *buffer;
-	int pos;
-	int buffer_len;
-} Lexer;
-
-Lexer *init_lexer(void);
-void destroy_lexer(Lexer *lexer);
-
-int read_file(Lexer *lexer, const char *file_name);
-U8 get_char(Lexer *lexer);
-U8 lex(Lexer *lexer);
-
-void print_error(const Lexer *lexer, const char *msg);
+U8 get_char(CmpCtrl *cc);
+U8 lex(CmpCtrl *cc);
+void print_error(const CmpCtrl *cc, const char *msg);
 
 #endif

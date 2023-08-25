@@ -1,125 +1,95 @@
 #include "../../unity/unity.h"
 #include "common.h"
+#include "control.h"
 #include "lexer.h"
 
 #define EXAMPLE1_LEN 7
 #define EXAMPLE2_LEN 210
-#define ESCAPES_LEN  12
 
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_init_lexer(void)
-{
-	Lexer *lexer = init_lexer();
-	TEST_ASSERT_NULL(lexer->buffer);
-	TEST_ASSERT_EQUAL_INT(0, lexer->pos);
-	TEST_ASSERT_EQUAL_INT(0, lexer->buffer_len);
-	destroy_lexer(lexer);
-}
-
-void test_read_file(void)
-{
-	Lexer *lexer = init_lexer();
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer, "example.txt"));
-	TEST_ASSERT_EQUAL_INT(EXAMPLE1_LEN, lexer->buffer_len);
-	TEST_ASSERT_EQUAL_MEMORY("a(b|c)*", lexer->buffer, lexer->buffer_len);
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer, "example2.txt"));
-	TEST_ASSERT_EQUAL_INT(EXAMPLE2_LEN, lexer->buffer_len);
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer, "empty.txt"));
-	TEST_ASSERT_EQUAL_INT(0, lexer->buffer_len);
-	destroy_lexer(lexer);
-
-	// read_file() twice, ignoring first call
-	Lexer *lexer2 = init_lexer();
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer2, "example.txt"));
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer2, "example2.txt"));
-	TEST_ASSERT_EQUAL_INT(EXAMPLE2_LEN, lexer2->buffer_len);
-	destroy_lexer(lexer2);
-}
-
 void test_get_char(void)
 {
 	U8 ch;
-	Lexer *lexer = init_lexer();
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer, "example.txt"));
+	CmpCtrl *cc = init_cmpctrl();
+	TEST_ASSERT_EQUAL_INT(0, read_file(cc, "../example.txt"));
 	char *example = "a(b|c)*";
 	for (int i = 0; i < EXAMPLE1_LEN; i++) {
-		ch = get_char(lexer);
-		TEST_ASSERT_EQUAL_INT(i+1, lexer->pos);
+		ch = get_char(cc);
+		TEST_ASSERT_EQUAL_INT(i+1, cc->pos);
 		TEST_ASSERT_EQUAL_UINT8(example[i], ch);
 	}
-	ch = get_char(lexer);
-	TEST_ASSERT_EQUAL_INT(EXAMPLE1_LEN, lexer->pos);
+	ch = get_char(cc);
+	TEST_ASSERT_EQUAL_INT(EXAMPLE1_LEN, cc->pos);
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, ch);
 	// get_char should continue to return TK_EOF
-	ch = get_char(lexer);
-	TEST_ASSERT_EQUAL_INT(EXAMPLE1_LEN, lexer->pos);
+	ch = get_char(cc);
+	TEST_ASSERT_EQUAL_INT(EXAMPLE1_LEN, cc->pos);
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, ch);
-	destroy_lexer(lexer);
+	destroy_cmpctrl(cc);
 }
 
 void test_lex(void)
 {
-	U8 tk;
-	Lexer *lexer = init_lexer();
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer, "example.txt"));
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('a', tk);
-	print_error(lexer, "blblblblbl");
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(TK_LPAREN, tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('b', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(TK_PIPE, tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('c', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(TK_RPAREN, tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(TK_STAR, tk);
-	print_error(lexer, "fake error, expected '(' or smth lol");
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(TK_EOF, tk);
+	CmpCtrl *cc = init_cmpctrl();
+	TEST_ASSERT_EQUAL_INT(0, read_file(cc, "../example.txt"));
+	TEST_ASSERT_EQUAL_UINT8('a', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('a', cc->token);
+	print_error(cc, "blblblblbl");
+	TEST_ASSERT_EQUAL_UINT8(TK_LPAREN, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_LPAREN, cc->token);
+	TEST_ASSERT_EQUAL_UINT8('b', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('b', cc->token);
+	TEST_ASSERT_EQUAL_UINT8(TK_PIPE, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_PIPE, cc->token);
+	TEST_ASSERT_EQUAL_UINT8('c', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('c', cc->token);
+	TEST_ASSERT_EQUAL_UINT8(TK_RPAREN, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_RPAREN, cc->token);
+	TEST_ASSERT_EQUAL_UINT8(TK_STAR, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_STAR, cc->token);
+	print_error(cc, "fake error, expected '(' or smth lol");
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
 
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer, "example2.txt"));
+	TEST_ASSERT_EQUAL_INT(0, read_file(cc, "../example2.txt"));
 	for (int i = 0; i < EXAMPLE2_LEN; i++) {
-		tk = lex(lexer);
-		TEST_ASSERT_TRUE(tk < TK_EOF);
+		lex(cc);
+		TEST_ASSERT_TRUE(cc->token < TK_EOF);
 	}
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(TK_EOF, tk);
+	// read EOF again
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
 
-	TEST_ASSERT_EQUAL_INT(0, read_file(lexer, "escapes.txt"));
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('(', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('|', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(')', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('\t', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('*', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('\n', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8('\\', tk);
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(TK_ILLEGAL, tk);
-	print_error(lexer, "unknown character");
-	tk = lex(lexer);
-	TEST_ASSERT_EQUAL_UINT8(TK_EOF, tk);
-	destroy_lexer(lexer);
+	TEST_ASSERT_EQUAL_INT(0, read_file(cc, "../escapes.txt"));
+	TEST_ASSERT_EQUAL_UINT8('(', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('(', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('|', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('|', cc->token);
+	TEST_ASSERT_EQUAL_UINT8(')', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(')', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('\t', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('\t', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('*', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('*', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('\n', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('\n', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('\\', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('\\', cc->token);
+	TEST_ASSERT_EQUAL_UINT8(TK_ILLEGAL, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_ILLEGAL, cc->token);
+	print_error(cc, "unknown character");
+	// read past illegal token
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
+	destroy_cmpctrl(cc);
 }
 
 int main(void)
 {
 	UNITY_BEGIN();
 
-	RUN_TEST(test_init_lexer);
-	RUN_TEST(test_read_file);
 	RUN_TEST(test_get_char);
 	RUN_TEST(test_lex);
 
