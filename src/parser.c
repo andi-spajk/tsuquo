@@ -5,7 +5,8 @@ Parse regular expressions and build a Thompson NFA representation.
 My definitions that probably aren't standard
 	Pattern: a sequence of literal/escaped ASCII characters, plus
 	         possible quantifiers
-	Group: a parenthetical regular expression, pattern, or range
+	Group: a parenthetical regular expression, a sequence of 1 or more
+	patterns, or a sequence of 1 or more ranges
 
 */
 
@@ -17,6 +18,14 @@ My definitions that probably aren't standard
 #include "nfa.h"
 #include "parser.h"
 
+/* parse()
+	@cc             ptr to CmpCtrl struct
+
+	@return         NFA representation of a regex, NULL if fail
+
+	Parse a regular expression and build a Thompson NFA representation of
+	it.
+*/
 NFA *parse(CmpCtrl *cc)
 {
 	NFA *god;
@@ -32,6 +41,8 @@ NFA *regex(CmpCtrl *cc)
 {
 	NFA *local;
 	if ((local = group(cc))) {
+		// gprime() modifies local, so no need to assign the return val
+		// to anything
 		if (gprime(cc, local))
 			return local;
 		else if (cc->token == TK_RPAREN)
@@ -56,7 +67,7 @@ NFA *group(CmpCtrl *cc)
 		lex(cc);
 		return g = quantifier(cc, g);
 	} else if ((g = pattern(cc))) {
-		return g;
+		return gprime(cc, g);
 	}// else if (g = range())
 	return NULL;
 }
@@ -79,7 +90,7 @@ NFA *gprime(CmpCtrl *cc, NFA *local)
 	return NULL;
 }
 
-NFA *quantifier(CmpCtrl *cc, NFA *group)
+NFA *quantifier(CmpCtrl *cc, NFA *nfa)
 {
 	U8 q;
 	switch (cc->token) {
@@ -89,12 +100,12 @@ NFA *quantifier(CmpCtrl *cc, NFA *group)
 	default: q = '\0'; break;
 	}
 	if (q) {
-		group = transform(group, q);
+		nfa = transform(nfa, q);
 		lex(cc);
-		return group;
+		return nfa;
 	} else if (cc->token <= TK_PIPE) {
 		// ASCII, EOF, (, ), [, |
-		return group;
+		return nfa;
 	}
 	print_error(cc, "expected '(', ')', '[', '|', or pattern");
 	return NULL;
@@ -102,33 +113,29 @@ NFA *quantifier(CmpCtrl *cc, NFA *group)
 
 NFA *pattern(CmpCtrl *cc)
 {
-	NFA *final_nfa;
+	NFA *final_nfa = NULL;
 	NFA *thompson;
-	if (cc->token < 128) {
-		final_nfa = init_thompson_nfa(cc->token);
-		if (!final_nfa) {
+	while (cc->token < 128) {
+		thompson = init_thompson_nfa(cc->token);
+		if (!thompson) {
 			print_error(cc, "FATAL MEMORY ERROR");
 			return NULL;
 		}
 		lex(cc);
-		while (cc->token < 128) {
-			thompson = init_thompson_nfa(cc->token);
-			if (!thompson) {
-				print_error(cc, "FATAL MEMORY ERROR");
-				return NULL;
-			}
-			lex(cc);
-			if (!quantifier(cc, thompson))
-				return NULL;
-			final_nfa = nfa_append(final_nfa, thompson);
-		}
-		if (TK_EOF <= cc->token && cc->token <= TK_PIPE) {
-			// EOF, (, ), [, |
-			return final_nfa;
-		} else {
-			print_error(cc, "expected '(', ')', '[', '|', or pattern");
+		if (!quantifier(cc, thompson)) {
+			destroy_nfa_and_states(final_nfa);
+			destroy_nfa_and_states(thompson);
 			return NULL;
 		}
+		final_nfa = nfa_append(final_nfa, thompson);
+	}
+	if (TK_EOF <= cc->token && cc->token <= TK_PIPE) {
+		// EOF, (, ), [, |
+		return final_nfa;
+	} else {
+		print_error(cc, "expected '(', ')', '[', '|', or pattern");
+		destroy_nfa_and_states(final_nfa);
+		return NULL;
 	}
 	return NULL;
 }

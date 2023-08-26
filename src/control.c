@@ -6,6 +6,7 @@ Compiler control stores all necessary info for each phase of the program.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "control.h"
 
@@ -71,5 +72,28 @@ int read_file(CmpCtrl *cc, const char *file_name)
 	cc->pos = 0;
 
 	fclose(f);
+	return 0;
+}
+
+/* read_line()
+	@cc             ptr to CmpCtrl struct
+	@line           regex string
+	@size           length of string, EXCLUDING null terminator
+
+	@return         0 if line is successfully read, otherwise -1
+
+	Read a string of length @size, which contains a regular expression,
+	into the CmpCtrl's internal buffer. If the buffer already holds data,
+	it is freed and overwritten with new data.
+*/
+int read_line(CmpCtrl *cc, const char *line, const int size)
+{
+	free(cc->buffer);
+	cc->buffer = malloc(size);
+	if (!cc->buffer)
+		return -1;
+	memcpy(cc->buffer, line, size);
+	cc->buffer_len = size;
+	cc->pos = 0;
 	return 0;
 }

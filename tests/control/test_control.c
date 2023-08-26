@@ -38,12 +38,43 @@ void test_read_file(void)
 	destroy_cmpctrl(cc2);
 }
 
+void test_read_line(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+
+	// declare with [] so sizeof(str) works intuitively
+	const char test_line1[] = "abc";
+	const char test_line2[] = "\\\\";
+	const char test_line3[] = "x(y|z)*";
+	const char test_line4[] = "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO";
+
+	TEST_ASSERT_EQUAL_INT(0, read_line(cc, test_line1, sizeof(test_line1)-1));
+	TEST_ASSERT_EQUAL_INT(0, cc->pos);
+	TEST_ASSERT_EQUAL_INT(3, cc->buffer_len);
+	TEST_ASSERT_EQUAL_INT8_ARRAY(test_line1, cc->buffer, cc->buffer_len);
+	TEST_ASSERT_EQUAL_INT(0, read_line(cc, test_line2, sizeof(test_line2)-1));
+	TEST_ASSERT_EQUAL_INT(0, cc->pos);
+	TEST_ASSERT_EQUAL_INT(2, cc->buffer_len);
+	TEST_ASSERT_EQUAL_INT8_ARRAY(test_line2, cc->buffer, cc->buffer_len);
+	TEST_ASSERT_EQUAL_INT(0, read_line(cc, test_line3, sizeof(test_line3)-1));
+	TEST_ASSERT_EQUAL_INT(0, cc->pos);
+	TEST_ASSERT_EQUAL_INT(7, cc->buffer_len);
+	TEST_ASSERT_EQUAL_INT8_ARRAY(test_line3, cc->buffer, cc->buffer_len);
+	TEST_ASSERT_EQUAL_INT(0, read_line(cc, test_line4, sizeof(test_line4)-1));
+	TEST_ASSERT_EQUAL_INT(0, cc->pos);
+	TEST_ASSERT_EQUAL_INT(46, cc->buffer_len);
+	TEST_ASSERT_EQUAL_INT8_ARRAY(test_line4, cc->buffer, cc->buffer_len);
+
+	destroy_cmpctrl(cc);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
 
 	RUN_TEST(test_init_cmpctrl);
 	RUN_TEST(test_read_file);
+	RUN_TEST(test_read_line);
 
 	return UNITY_END();
 }

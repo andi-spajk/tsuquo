@@ -8,6 +8,6 @@ tests/nfa/test_nfa
 tests/nfa/*.dot
 tests/nfa/*.svg
 tests/parser/test_parser
-tests/parser/*.dot
-tests/parser/*.svg
+tests/parser/dots
+tests/parser/svgs
 tests/control/test_control

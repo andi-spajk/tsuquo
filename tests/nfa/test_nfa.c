@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include "../../unity/unity.h"
 #include "common.h"
 #include "nfa.h"
@@ -150,6 +152,10 @@ void test_nfa_append(void)
 	TEST_ASSERT_NULL(curr->out2);
 	TEST_ASSERT_EQUAL_PTR(regex->accept, curr);
 	TEST_ASSERT_TRUE(set_find(regex->mem_region, curr));
+
+	NFA *shallow_copy = NULL;
+	shallow_copy = nfa_append(shallow_copy, regex);
+	TEST_ASSERT_EQUAL_PTR(regex, shallow_copy);
 
 	destroy_nfa_and_states(regex);
 }

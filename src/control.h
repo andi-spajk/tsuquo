@@ -21,5 +21,6 @@ typedef struct CompilerControl {
 CmpCtrl *init_cmpctrl(void);
 void destroy_cmpctrl(CmpCtrl *cc);
 int read_file(CmpCtrl *cc, const char *file_name);
+int read_line(CmpCtrl *cc, const char *line, const int size);
 
 #endif

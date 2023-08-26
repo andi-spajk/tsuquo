@@ -201,6 +201,9 @@ NFA *nfa_union(NFA *lhs, NFA *rhs)
 */
 NFA *nfa_append(NFA *lhs, NFA *rhs)
 {
+	if (!lhs)
+		return rhs;
+
 	lhs->accept->out1 = rhs->start;
 	// `lhs->accept`'s epsilon transition is still there
 	// now reassign accept

@@ -14,7 +14,7 @@ NFA *parse(CmpCtrl *cc);
 NFA *regex(CmpCtrl *cc);
 NFA *group(CmpCtrl *cc);
 NFA *gprime(CmpCtrl *cc, NFA *local);
-NFA *quantifier(CmpCtrl *cc, NFA *group);
+NFA *quantifier(CmpCtrl *cc, NFA *nfa);
 NFA *pattern(CmpCtrl *cc);
 
 #endif

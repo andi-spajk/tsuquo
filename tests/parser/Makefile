@@ -18,6 +18,8 @@ $(OBJ):
 	mkdir -p $@
 
 test_parser: $(DEP) $(UNITY_DEP) $(HEADERS)
+	mkdir -p dots
+	mkdir -p svgs
 	$(CC) $(CFLAGS) $(DEP) $(UNITY_DEP) -o $@
 
 $(OBJ)/test_parser.o: test_parser.c | $(OBJ)
@@ -34,3 +36,5 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 
 clean:
 	rm $(DEP) $(UNITY_DEP) test_parser -rf
+	rm dots/* -rf
+	rm svgs/* -rf
