@@ -28,12 +28,18 @@ My definitions that probably aren't standard
 */
 NFA *parse(CmpCtrl *cc)
 {
+	cc->flags = 0;
 	NFA *god;
 	lex(cc);
 	if ((god = regex(cc))) {
-		if (cc->token == TK_EOF)
-			return god;
+		if (!(cc->flags & CC_ABORT)) {
+			if (cc->token == TK_EOF)
+				return god;
+			else
+				print_error(cc, "expected end of regex");
+		}
 	}
+	destroy_nfa_and_states(god);
 	return NULL;
 }
 
@@ -45,6 +51,8 @@ NFA *regex(CmpCtrl *cc)
 		// to anything
 		if (gprime(cc, local))
 			return local;
+		else if (cc->flags & CC_ABORT)  // did gprime set ABORT flag?
+			return NULL;
 		else if (cc->token == TK_RPAREN)
 			return local;
 		else
@@ -58,10 +66,15 @@ NFA *group(CmpCtrl *cc)
 	NFA *g;
 	if (cc->token == TK_LPAREN) {
 		lex(cc);
-		if (!(g = regex(cc)))
+		if (!(g = regex(cc))) {
+			cc->flags |= CC_DISABLE_ERROR_SUPPLEMENT;
+			print_error(cc, "malformed regex");
 			return NULL;
+		}
 		if (cc->token != TK_RPAREN) {
 			print_error(cc, "expected ')'");
+			destroy_nfa_and_states(g);
+			cc->flags |= CC_DISABLE_ERROR_MSG;
 			return NULL;
 		}
 		lex(cc);
@@ -83,6 +96,18 @@ NFA *gprime(CmpCtrl *cc, NFA *local)
 		if ((g = group(cc))) {
 			local = nfa_union(local, g);
 			return gprime(cc, local);
+		} else {
+			print_error(cc, "expected '(', '[', or pattern");
+			destroy_nfa_and_states(g);
+			destroy_nfa_and_states(local);
+			cc->flags |= CC_DISABLE_ERROR_MSG;
+			// regexes like (a|) will fail gprime()
+			// but then we propagate back to regex(), which would
+			// match RPAREN
+			// that's incorrect, so gprime() sets an abort flag
+			// when PIPE fails to be parsed
+			cc->flags |= CC_ABORT;
+			return NULL;
 		}
 	} else if (cc->token == TK_EOF || cc->token == TK_RPAREN) {
 		return local;
@@ -99,6 +124,7 @@ NFA *quantifier(CmpCtrl *cc, NFA *nfa)
 	case TK_PLUS:     q = '+'; break;
 	default: q = '\0'; break;
 	}
+
 	if (q) {
 		nfa = transform(nfa, q);
 		lex(cc);
@@ -118,7 +144,10 @@ NFA *pattern(CmpCtrl *cc)
 	while (cc->token < 128) {
 		thompson = init_thompson_nfa(cc->token);
 		if (!thompson) {
-			print_error(cc, "FATAL MEMORY ERROR");
+			cc->flags |= CC_DISABLE_LINE_PRINT;
+			print_error(cc, "!!!FATAL MEMORY ERROR!!!");
+			// all subsequent errors will be meaningless
+			cc->flags |= CC_DISABLE_ERROR_MSG;
 			return NULL;
 		}
 		lex(cc);
@@ -129,13 +158,16 @@ NFA *pattern(CmpCtrl *cc)
 		}
 		final_nfa = nfa_append(final_nfa, thompson);
 	}
+
 	if (TK_EOF <= cc->token && cc->token <= TK_PIPE) {
 		// EOF, (, ), [, |
 		return final_nfa;
 	} else {
-		print_error(cc, "expected '(', ')', '[', '|', or pattern");
+		print_error(cc, "expected pattern, '(', '[', or end of regex");
 		destroy_nfa_and_states(final_nfa);
+		// try to minimize redundant messages when we propagate up the
+		// call stack
+		cc->flags |= CC_DISABLE_ERROR_MSG;
 		return NULL;
 	}
-	return NULL;
 }

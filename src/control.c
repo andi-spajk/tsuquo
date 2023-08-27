@@ -22,9 +22,6 @@ CmpCtrl *init_cmpctrl(void)
 	CmpCtrl *cc = calloc(1, sizeof(CmpCtrl));
 	if (!cc)
 		return NULL;
-	cc->buffer = NULL;
-	cc->pos = 0;
-	cc->buffer_len = 0;
 	return cc;
 }
 
@@ -52,7 +49,7 @@ void destroy_cmpctrl(CmpCtrl *cc)
 */
 int read_file(CmpCtrl *cc, const char *file_name)
 {
-	FILE *f = fopen(file_name, "r");
+	FILE *f = fopen(file_name, "rb");
 	if (!f)
 		return -1;
 

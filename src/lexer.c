@@ -77,7 +77,37 @@ U8 lex(CmpCtrl *cc)
 */
 void print_error(const CmpCtrl *cc, const char *msg)
 {
-	printf("ERROR: %s\n", msg);
+	if (cc->flags & CC_DISABLE_ERROR_MSG)
+		return;
+
+	char str[4] = "\'\'\'";
+
+	printf("ERROR: %s", msg);
+
+	if (!(cc->flags & CC_DISABLE_ERROR_SUPPLEMENT)) {
+		printf(", instead found");
+		switch (cc->token) {
+		case TK_EOF: printf(" end of regex"); break;
+		case TK_LPAREN: printf(" '('"); break;
+		case TK_RPAREN: printf(" ')'"); break;
+		case TK_LBRACKET: printf(" '['"); break;
+		case TK_PIPE: printf(" '|'"); break;
+		case TK_STAR: printf(" '*'"); break;
+		case TK_QUESTION: printf(" '?'"); break;
+		case TK_PLUS: printf(" '+'"); break;
+		case TK_RBRACKET: printf(" ']'"); break;
+		case TK_ILLEGAL: printf(" illegal escape sequence"); break;
+		default:
+			str[1] = cc->token;
+			printf(" %s", str);
+		}
+	}
+	putchar('\n');
+
+	if (cc->flags & CC_DISABLE_LINE_PRINT) {
+		putchar('\n');
+		return;
+	}
 
 	// buffer isn't null-terminated
 	fwrite(cc->buffer, 1, cc->buffer_len, stdout);
@@ -86,6 +116,8 @@ void print_error(const CmpCtrl *cc, const char *msg)
 	// error arrow
 	// cc->pos always sits one char ahead of the previously fetched token
 	for (int i = 0; i < cc->pos-1; i++)
+		putchar(' ');
+	if (cc->token == TK_EOF)
 		putchar(' ');
 	printf("^\n\n");
 }

@@ -36,6 +36,7 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_INT(0, read_file(cc, "../example.txt"));
 	TEST_ASSERT_EQUAL_UINT8('a', lex(cc));
 	TEST_ASSERT_EQUAL_UINT8('a', cc->token);
+	cc->flags |= CC_DISABLE_ERROR_SUPPLEMENT;
 	print_error(cc, "blblblblbl");
 	TEST_ASSERT_EQUAL_UINT8(TK_LPAREN, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_LPAREN, cc->token);
@@ -49,6 +50,7 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_UINT8(TK_RPAREN, cc->token);
 	TEST_ASSERT_EQUAL_UINT8(TK_STAR, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_STAR, cc->token);
+	cc->flags = 0 | CC_DISABLE_LINE_PRINT;
 	print_error(cc, "fake error, expected '(' or smth lol");
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
@@ -69,6 +71,8 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_UINT8('|', cc->token);
 	TEST_ASSERT_EQUAL_UINT8(')', lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(')', cc->token);
+	cc->flags |= CC_DISABLE_ERROR_MSG;
+	print_error(cc, "you can't see this");
 	TEST_ASSERT_EQUAL_UINT8('\t', lex(cc));
 	TEST_ASSERT_EQUAL_UINT8('\t', cc->token);
 	TEST_ASSERT_EQUAL_UINT8('*', lex(cc));
@@ -79,6 +83,7 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_UINT8('\\', cc->token);
 	TEST_ASSERT_EQUAL_UINT8(TK_ILLEGAL, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_ILLEGAL, cc->token);
+	cc->flags = 0;
 	print_error(cc, "unknown character");
 	// read past illegal token
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));

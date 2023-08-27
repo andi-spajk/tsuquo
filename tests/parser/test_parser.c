@@ -12,6 +12,14 @@
 	destroy_nfa_and_states((nfa)); \
 }
 
+#define TEST_ERROR_HELPER(cc, str, nfa) { \
+	printf("----------------------------------------" \
+	       "----------------------------------------\n"); \
+	read_line((cc), (str), sizeof((str))-1); \
+	(nfa) = parse((cc)); \
+	TEST_ASSERT_NULL((nfa)); \
+}
+
 void setUp(void) {}
 void tearDown(void) {}
 
@@ -51,6 +59,8 @@ void test_parse(void)
 	const char test_1C[] = "\\(abc\\)";
 	const char test_1D[] = "\\(abc\\)\\|\\(def\\)";
 	const char test_1E[] = "\\(\\)\\[\\|\\*\\?\\+\\]";
+	const char test_1F[] = "(hi+)";
+	const char test_20[] = "(a|(b|(c)))";
 
 	read_file(cc, "../example.txt");
 	nfa = parse(cc);
@@ -96,6 +106,8 @@ void test_parse(void)
 	TEST_PARSE_HELPER(cc, test_1C, nfa, "dots/test_1C.dot");
 	TEST_PARSE_HELPER(cc, test_1D, nfa, "dots/test_1D.dot");
 	TEST_PARSE_HELPER(cc, test_1E, nfa, "dots/test_1E.dot");
+	TEST_PARSE_HELPER(cc, test_1F, nfa, "dots/test_1F.dot");
+	TEST_PARSE_HELPER(cc, test_20, nfa, "dots/test_20.dot");
 
 	destroy_cmpctrl(cc);
 }
@@ -108,7 +120,45 @@ void test_errors_and_recovery(void)
 	NFA *nfa = parse(cc);
 	TEST_ASSERT_NULL(nfa);
 
-	// const char error0[] = "xy+*";
+	const char error_0[] = "a)";
+	const char error_1[] = "a+*";
+	const char error_2[] = "()";
+	const char error_3[] = "(";
+	const char error_4[] = "(?";
+	const char error_5[] = "(abc";
+	const char error_6[] = "q|";
+	const char error_7[] = "(ab|";
+	const char error_8[] = "($$$|)";
+	const char error_9[] = "(xyz|+)";
+	const char error_A[] = "(abc\\)";
+	const char error_B[] = "(123(987";
+	const char error_C[] = "(123(onoes)";
+	const char error_D[] = "(hi(bye|";
+	const char error_E[] = "(a(z|)";
+	const char error_F[] = "(woah|(nelly)";
+	const char error_10[] = "two||wtf";
+	const char error_11[] = "(ab|)";
+	const char error_12[] = "(@#$|%&!|)";
+
+	TEST_ERROR_HELPER(cc, error_0, nfa);
+	TEST_ERROR_HELPER(cc, error_1, nfa);
+	TEST_ERROR_HELPER(cc, error_2, nfa);
+	TEST_ERROR_HELPER(cc, error_3, nfa);
+	TEST_ERROR_HELPER(cc, error_4, nfa);
+	TEST_ERROR_HELPER(cc, error_5, nfa);
+	TEST_ERROR_HELPER(cc, error_6, nfa);
+	TEST_ERROR_HELPER(cc, error_7, nfa);
+	TEST_ERROR_HELPER(cc, error_8, nfa);
+	TEST_ERROR_HELPER(cc, error_9, nfa);
+	TEST_ERROR_HELPER(cc, error_A, nfa);
+	TEST_ERROR_HELPER(cc, error_B, nfa);
+	TEST_ERROR_HELPER(cc, error_C, nfa);
+	TEST_ERROR_HELPER(cc, error_D, nfa);
+	TEST_ERROR_HELPER(cc, error_E, nfa);
+	TEST_ERROR_HELPER(cc, error_F, nfa);
+	TEST_ERROR_HELPER(cc, error_10, nfa);
+	TEST_ERROR_HELPER(cc, error_11, nfa);
+	TEST_ERROR_HELPER(cc, error_12, nfa);
 
 	destroy_cmpctrl(cc);
 }

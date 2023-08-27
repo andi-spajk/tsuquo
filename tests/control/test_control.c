@@ -15,6 +15,7 @@ void test_init_cmpctrl(void)
 	TEST_ASSERT_NULL(cc->buffer);
 	TEST_ASSERT_EQUAL_INT(0, cc->pos);
 	TEST_ASSERT_EQUAL_INT(0, cc->buffer_len);
+	TEST_ASSERT_EQUAL_INT(0, cc->flags);
 	destroy_cmpctrl(cc);
 }
 
