@@ -74,7 +74,9 @@ void test_init_thompson_nfa(void)
 void test_nfa_union(void)
 {
 	NFA *regex = init_thompson_nfa('a');
+	TEST_ASSERT_EQUAL_PTR(regex, nfa_union(regex, NULL));
 	NFA *b = init_thompson_nfa('b');
+	TEST_ASSERT_EQUAL_PTR(b, nfa_union(NULL, b));
 	regex = nfa_union(regex, b);
 
 	TEST_ASSERT_NOT_NULL(regex);
@@ -156,6 +158,8 @@ void test_nfa_append(void)
 	NFA *shallow_copy = NULL;
 	shallow_copy = nfa_append(shallow_copy, regex);
 	TEST_ASSERT_EQUAL_PTR(regex, shallow_copy);
+
+	TEST_ASSERT_EQUAL_PTR(regex, nfa_append(regex, NULL));
 
 	destroy_nfa_and_states(regex);
 }

@@ -156,6 +156,11 @@ NFA *init_thompson_nfa(U8 ch)
 */
 NFA *nfa_union(NFA *lhs, NFA *rhs)
 {
+	if (!rhs)
+		return lhs;
+	if (!lhs)
+		return rhs;
+
 	NFAState *new_accept = init_nfastate();
 	NFAState *new_start = init_nfastate();
 	if (!(new_accept || new_start)) {
@@ -203,6 +208,8 @@ NFA *nfa_append(NFA *lhs, NFA *rhs)
 {
 	if (!lhs)
 		return rhs;
+	if (!rhs)
+		return lhs;
 
 	lhs->accept->out1 = rhs->start;
 	// `lhs->accept`'s epsilon transition is still there

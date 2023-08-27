@@ -20,6 +20,8 @@
 	TEST_ASSERT_NULL((nfa)); \
 }
 
+#define SET_BIT(u64, i) (u64) |= (1ULL << (i))
+
 void setUp(void) {}
 void tearDown(void) {}
 
@@ -62,6 +64,18 @@ void test_parse(void)
 	const char test_1F[] = "(hi+)";
 	const char test_20[] = "(a|(b|(c)))";
 
+	// for test_18
+	U64 check64_127 = 0;
+	SET_BIT(check64_127, 'w'-64);
+	SET_BIT(check64_127, 'a'-64);
+	SET_BIT(check64_127, 't'-64);
+	SET_BIT(check64_127, 'c'-64);
+	SET_BIT(check64_127, 'h'-64);
+	SET_BIT(check64_127, 'i'-64);
+	SET_BIT(check64_127, 's'-64);
+	SET_BIT(check64_127, 'o'-64);
+	SET_BIT(check64_127, 'r'-64);
+
 	read_file(cc, "../example.txt");
 	nfa = parse(cc);
 	TEST_ASSERT_NOT_NULL(nfa);
@@ -99,7 +113,14 @@ void test_parse(void)
 	TEST_PARSE_HELPER(cc, test_15, nfa, "dots/test_15.dot");
 	TEST_PARSE_HELPER(cc, test_16, nfa, "dots/test_16.dot");
 	TEST_PARSE_HELPER(cc, test_17, nfa, "dots/test_17.dot");
-	TEST_PARSE_HELPER(cc, test_18, nfa, "dots/test_18.dot");
+
+	read_line(cc, test_18, sizeof(test_18)-1);
+	nfa = parse(cc);
+	TEST_ASSERT_NOT_NULL(nfa);
+	gen_nfa_graphviz(nfa, "dots/test_18.dot");
+	TEST_ASSERT_EQUAL_UINT64(nfa->alphabet64_127, check64_127);
+	destroy_nfa_and_states(nfa);
+
 	TEST_PARSE_HELPER(cc, test_19, nfa, "dots/test_19.dot");
 	TEST_PARSE_HELPER(cc, test_1A, nfa, "dots/test_1A.dot");
 	TEST_PARSE_HELPER(cc, test_1B, nfa, "dots/test_1B.dot");
