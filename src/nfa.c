@@ -283,6 +283,34 @@ NFA *transform(NFA *nfa, U8 quantifier)
 	return nfa;
 }
 
+/* init_range_nfa()
+	@left           lower bound of the regex range
+	@right          upper bound of the regex range
+
+	@return         ptr to NFA struct representing the entire range, NULL if
+	                fail
+
+	Recursively construct an NFA that represents a regular expression range.
+
+	TODO: The result NFA almost resembles a binary tree but it's not
+	perfect. Improve it later.
+*/
+NFA *init_range_nfa(U8 left, U8 right)
+{
+	NFA *t1, *t2;
+	if (left == right) {
+		return init_thompson_nfa(left);
+	} else if (left == right - 1) {
+		t1 = init_thompson_nfa(left);
+		t2 = init_thompson_nfa(right);
+		return nfa_union(t1, t2);
+	} else {
+		t1 = init_range_nfa(left, left+((right-left)/2));
+		t2 = init_range_nfa(left+((right-left)/2)+1, right);
+		return nfa_union(t1, t2);
+	}
+}
+
 /* reset_states()
 	@nfa            ptr to NFA struct
 
@@ -355,6 +383,10 @@ static void graphviz_helper(NFAState *state, FILE *f)
 		fprintf(f, " n%d", state->out1->index);
 		if (state->ch == EPSILON)
 			fprintf(f, " [label=\"&epsilon;\"]\n");
+		else if (state->ch == '"')
+			fprintf(f, " [label=\"\\\"\"]\n");
+		else if (state->ch == '\\')
+			fprintf(f, " [label=\"\\\\\"]\n");
 		else
 			fprintf(f, " [label=\"%c\"]\n", state->ch);
 		// we printed transition, but only perform the transition if the

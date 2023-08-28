@@ -286,31 +286,99 @@ void test_transform(void)
 	destroy_nfa_and_states(regex);
 }
 
+void test_init_range_nfa(void)
+{
+	NFA *range = NULL;
+
+	// [A-B]
+	range = init_range_nfa('A', 'B');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/A-B.dot");
+	destroy_nfa_and_states(range);
+	// [A-C]
+	range = init_range_nfa('A', 'C');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/A-C.dot");
+	destroy_nfa_and_states(range);
+	// [A-D]
+	range = init_range_nfa('A', 'D');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/A-D.dot");
+	destroy_nfa_and_states(range);
+	// [A-E]
+	range = init_range_nfa('A', 'E');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/A-E.dot");
+	destroy_nfa_and_states(range);
+	// [A-F]
+	range = init_range_nfa('A', 'F');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/A-F.dot");
+	destroy_nfa_and_states(range);
+	// [A-G]
+	range = init_range_nfa('A', 'G');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/A-G.dot");
+	destroy_nfa_and_states(range);
+	// [A-H]
+	range = init_range_nfa('A', 'H');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/A-H.dot");
+	destroy_nfa_and_states(range);
+	// [A-Z]
+	range = init_range_nfa('A', 'Z');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/A-Z.dot");
+	destroy_nfa_and_states(range);
+	// [0-9]
+	range = init_range_nfa('0', '9');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/digit09.dot");
+	range = transform(range, '+');
+	gen_nfa_graphviz(range, "dots/digit09plus.dot");
+	destroy_nfa_and_states(range);
+	// [ -(]
+	range = init_range_nfa(' ', '(');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/space_paren.dot");
+	destroy_nfa_and_states(range);
+	// [0-9]
+	range = init_range_nfa('0', '7');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/digit07.dot");
+	destroy_nfa_and_states(range);
+	// [\[-`]
+	range = init_range_nfa('[', '`');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/rbrak_grave.dot");
+	destroy_nfa_and_states(range);
+}
+
 void test_index_states_and_gen_graphviz(void)
 {
 	// a
 	NFA *a = init_thompson_nfa('a');
 	TEST_ASSERT_NOT_NULL(a);
 	TEST_ASSERT_EQUAL_INT(a->size, index_states(a)+1);
-	gen_nfa_graphviz(a, "a.dot");
+	gen_nfa_graphviz(a, "dots/a.dot");
 
 	// b
 	NFA *b = init_thompson_nfa('b');
 	TEST_ASSERT_NOT_NULL(b);
 	TEST_ASSERT_EQUAL_INT(b->size, index_states(b)+1);
-	gen_nfa_graphviz(b, "b.dot");
+	gen_nfa_graphviz(b, "dots/b.dot");
 
 	// a|b
 	NFA *regex = nfa_union(a, b);
 	TEST_ASSERT_NOT_NULL(regex);
 	TEST_ASSERT_EQUAL_INT(regex->size, index_states(regex)+1);
-	gen_nfa_graphviz(regex, "a_or_b.dot");
+	gen_nfa_graphviz(regex, "dots/a_or_b.dot");
 
 	// (a|b)*
 	regex = transform(regex, '*');
 	TEST_ASSERT_NOT_NULL(regex);
 	TEST_ASSERT_EQUAL_INT(regex->size, index_states(regex)+1);
-	gen_nfa_graphviz(regex, "a_or_b_closure.dot");
+	gen_nfa_graphviz(regex, "dots/a_or_b_closure.dot");
 
 	destroy_nfa_and_states(regex);
 }
@@ -320,13 +388,13 @@ void test_graphviz_other_quantifiers(void)
 	// @+
 	NFA *at = init_thompson_nfa('@');
 	at = transform(at, '+');
-	gen_nfa_graphviz(at, "atplus.dot");
+	gen_nfa_graphviz(at, "dots/atplus.dot");
 	destroy_nfa_and_states(at);
 
 	// &?
 	NFA *maybe_and = init_thompson_nfa('&');
 	maybe_and = transform(maybe_and, '?');
-	gen_nfa_graphviz(maybe_and, "maybe_and.dot");
+	gen_nfa_graphviz(maybe_and, "dots/maybe_and.dot");
 	destroy_nfa_and_states(maybe_and);
 }
 
@@ -350,7 +418,7 @@ void test_epsilon_closure(void)
 
 	regex = nfa_append(a, regex);
 	TEST_ASSERT_NOT_NULL(regex);
-	gen_nfa_graphviz(regex, "cooper_torczon_example2.5.dot");
+	gen_nfa_graphviz(regex, "dots/cooper_torczon_example2.5.dot");
 
 	TEST_ASSERT_EQUAL_UINT8('a', regex->start->ch);
 	Set *eps = epsilon_closure(regex->start->out1);
@@ -377,6 +445,7 @@ int main(void)
 	RUN_TEST(test_nfa_union);
 	RUN_TEST(test_nfa_append);
 	RUN_TEST(test_transform);
+	RUN_TEST(test_init_range_nfa);
 	RUN_TEST(test_index_states_and_gen_graphviz);
 	RUN_TEST(test_graphviz_other_quantifiers);
 	RUN_TEST(test_epsilon_closure);

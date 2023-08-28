@@ -5,8 +5,8 @@ main
 tests/lexer/test_lexer
 tests/set/test_set
 tests/nfa/test_nfa
-tests/nfa/*.dot
-tests/nfa/*.svg
+tests/nfa/dots
+tests/nfa/svgs
 tests/parser/test_parser
 tests/parser/dots
 tests/parser/svgs

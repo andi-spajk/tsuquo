@@ -45,6 +45,7 @@ NFA *init_thompson_nfa(U8 ch);
 NFA *nfa_union(NFA *lhs, NFA *rhs);
 NFA *nfa_append(NFA *lhs, NFA *rhs);
 NFA *transform(NFA *nfa, U8 quantifier);
+NFA *init_range_nfa(U8 left, U8 right);
 
 int index_states(NFA *nfa);
 int gen_nfa_graphviz(NFA *nfa, const char *file_name);

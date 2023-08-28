@@ -18,6 +18,8 @@ $(OBJ):
 	mkdir -p $@
 
 test_nfa: $(DEP) $(UNITY_DEP) $(HEADERS)
+	mkdir -p dots
+	mkdir -p svgs
 	$(CC) $(CFLAGS) $(DEP) $(UNITY_DEP) -o $@
 
 $(OBJ)/test_nfa.o: test_nfa.c | $(OBJ)
