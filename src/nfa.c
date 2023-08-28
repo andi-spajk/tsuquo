@@ -300,10 +300,6 @@ NFA *init_range_nfa(U8 left, U8 right)
 	NFA *t1, *t2;
 	if (left == right) {
 		return init_thompson_nfa(left);
-	} else if (left == right - 1) {
-		t1 = init_thompson_nfa(left);
-		t2 = init_thompson_nfa(right);
-		return nfa_union(t1, t2);
 	} else {
 		t1 = init_range_nfa(left, left+((right-left)/2));
 		t2 = init_range_nfa(left+((right-left)/2)+1, right);

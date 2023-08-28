@@ -352,6 +352,11 @@ void test_init_range_nfa(void)
 	TEST_ASSERT_NOT_NULL(range);
 	gen_nfa_graphviz(range, "dots/rbrak_grave.dot");
 	destroy_nfa_and_states(range);
+	// .
+	range = init_range_nfa(' ', '~');
+	TEST_ASSERT_NOT_NULL(range);
+	gen_nfa_graphviz(range, "dots/matchall.dot");
+	destroy_nfa_and_states(range);
 }
 
 void test_index_states_and_gen_graphviz(void)
