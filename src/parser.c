@@ -47,8 +47,8 @@ NFA *regex(CmpCtrl *cc)
 {
 	NFA *local;
 	if ((local = group(cc))) {
-		// gprime() modifies local, so no need to assign the return val
-		// to anything
+		// gprime() modifies `local`'s members, so no need to assign
+		// the return val to anything
 		if (gprime(cc, local))
 			return local;
 		else if (cc->flags & CC_ABORT)  // did gprime set ABORT flag?
@@ -124,7 +124,7 @@ NFA *quantifier(CmpCtrl *cc, NFA *nfa)
 	case TK_STAR:     q = '*'; break;
 	case TK_QUESTION: q = '?'; break;
 	case TK_PLUS:     q = '+'; break;
-	default: q = '\0'; break;
+	default:          q = '\0'; break;
 	}
 
 	if (q) {

@@ -88,6 +88,23 @@ void test_lex(void)
 	// read past illegal token
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
+
+	TEST_ASSERT_EQUAL_INT(0, read_file(cc, "../newlines.txt"));
+	TEST_ASSERT_EQUAL_UINT8('a', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('a', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('b', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('b', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('c', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('c', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('d', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('d', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('e', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('e', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('f', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('f', cc->token);
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
+
 	destroy_cmpctrl(cc);
 }
 

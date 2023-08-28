@@ -36,6 +36,10 @@ U8 get_char(CmpCtrl *cc)
 U8 lex(CmpCtrl *cc)
 {
 	U8 ch = get_char(cc);
+	if (ch == '\r')
+		ch = get_char(cc);
+	if (ch == '\n')
+		ch = get_char(cc);
 	if (ch == '\\') {
 		ch = get_char(cc);
 		switch (ch) {
@@ -84,7 +88,7 @@ void print_error(const CmpCtrl *cc, const char *msg)
 
 	printf("ERROR: %s", msg);
 
-	if (!(cc->flags & CC_DISABLE_ERROR_SUPPLEMENT)) {
+	if (!(cc->flags & CC_DISABLE_INSTEAD_FOUND)) {
 		printf(", instead found");
 		switch (cc->token) {
 		case TK_EOF: printf(" end of regex"); break;
