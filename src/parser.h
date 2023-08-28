@@ -16,5 +16,7 @@ NFA *group(CmpCtrl *cc);
 NFA *gprime(CmpCtrl *cc, NFA *local);
 NFA *quantifier(CmpCtrl *cc, NFA *nfa);
 NFA *pattern(CmpCtrl *cc);
+NFA *range(CmpCtrl *cc);
+NFA *allowed(CmpCtrl *cc);
 
 #endif

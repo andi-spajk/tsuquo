@@ -67,7 +67,7 @@ NFA *group(CmpCtrl *cc)
 	if (cc->token == TK_LPAREN) {
 		lex(cc);
 		if (!(g = regex(cc))) {
-			cc->flags |= CC_DISABLE_ERROR_SUPPLEMENT;
+			cc->flags |= CC_DISABLE_INSTEAD_FOUND;
 			print_error(cc, "malformed regex");
 			return NULL;
 		}
@@ -81,7 +81,9 @@ NFA *group(CmpCtrl *cc)
 		return g = quantifier(cc, g);
 	} else if ((g = pattern(cc))) {
 		return gprime(cc, g);
-	}// else if (g = range())
+	} else if ((g = range(cc))) {
+		return g = quantifier(cc, g);
+	}
 	return NULL;
 }
 
@@ -170,4 +172,59 @@ NFA *pattern(CmpCtrl *cc)
 		cc->flags |= CC_DISABLE_ERROR_MSG;
 		return NULL;
 	}
+}
+
+NFA *range(CmpCtrl *cc)
+{
+	NFA *r;
+	if (cc->token == TK_LBRACKET) {
+		lex(cc);
+		if (!(r = allowed(cc)))
+			return NULL;
+		if (cc->token == TK_RBRACKET) {
+			lex(cc);
+			return r;
+		}
+		print_error(cc, "expected ']'");
+		destroy_nfa_and_states(r);
+	}
+	return NULL;
+}
+
+// if you want to match - then put it right after the opening bracket
+//   eg [-a] matches '-' or 'a'
+NFA *allowed(CmpCtrl *cc)
+{
+	NFA *result = NULL;
+	NFA *segment;
+	U8 left, right;
+	if (cc->token > '~') {
+		print_error(cc, "expected ASCII or escape char");
+		return NULL;
+	}
+	while (cc->token <= '~') {
+		left = cc->token;
+		lex(cc);
+		if (cc->token == '-') {
+			lex(cc);
+			if (cc->token > '~') {
+				print_error(cc, "expected ASCII or escape char");
+				destroy_nfa_and_states(result);
+				return NULL;
+			}
+			if (cc->token < left) {
+				cc->flags |= CC_DISABLE_INSTEAD_FOUND;
+				print_error(cc, "range's upper bound exceeds left bound");
+				destroy_nfa_and_states(result);
+				return NULL;
+			}
+			right = cc->token;
+			lex(cc);
+			segment = init_range_nfa(left, right);
+		} else {
+			segment = init_thompson_nfa(left);
+		}
+		result = nfa_union(result, segment);
+	}
+	return result;
 }

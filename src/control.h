@@ -9,7 +9,7 @@ Module definition for the compiler control structure.
 
 #include "common.h"
 
-#define CC_DISABLE_ERROR_SUPPLEMENT 0x1
+#define CC_DISABLE_INSTEAD_FOUND    0x1
 #define CC_DISABLE_ERROR_MSG        0x2
 #define CC_DISABLE_LINE_PRINT       0x4
 #define CC_ABORT                    0x8
@@ -25,7 +25,7 @@ typedef struct CompilerControl {
 	/*
 	flags are checked when printing error messages (see lexer.*)
 	when these flag bits are set:
-	CC_DISABLE_ERROR_SUPPLEMENT 0x1
+	CC_DISABLE_INSTEAD_FOUND 0x1
 		disables the error message supplement ", instead found ???"
 	CC_DISABLE_ERROR_MSG 0x2
 		disables error message printing

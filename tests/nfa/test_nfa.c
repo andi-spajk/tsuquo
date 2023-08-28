@@ -69,6 +69,25 @@ void test_init_thompson_nfa(void)
 	TEST_ASSERT_TRUE(set_find(t2->mem_region, t2->accept));
 
 	destroy_nfa_and_states(t2);
+
+	NFA *tab = init_thompson_nfa('\t');
+	TEST_ASSERT_NOT_NULL(tab);
+	TEST_ASSERT_EQUAL_PTR(compare_nfastate_ptr, tab->mem_region->compare);
+
+	TEST_ASSERT_EQUAL_UINT8('\t', tab->start->ch);
+	TEST_ASSERT_EQUAL_PTR(tab->accept, tab->start->out1);
+	TEST_ASSERT_NULL(tab->start->out2);
+
+	TEST_ASSERT_EQUAL_UINT8(0, tab->accept->ch);
+
+	TEST_ASSERT_EQUAL_UINT64(1ULL << '\t', tab->alphabet0_63);
+	TEST_ASSERT_EQUAL_UINT64(0, tab->alphabet64_127);
+	TEST_ASSERT_EQUAL_INT(2, tab->size);
+
+	TEST_ASSERT_TRUE(set_find(tab->mem_region, tab->start));
+	TEST_ASSERT_TRUE(set_find(tab->mem_region, tab->accept));
+
+	destroy_nfa_and_states(tab);
 }
 
 void test_nfa_union(void)
@@ -388,7 +407,7 @@ void test_index_states_and_gen_graphviz(void)
 	destroy_nfa_and_states(regex);
 }
 
-void test_graphviz_other_quantifiers(void)
+void test_graphviz_other(void)
 {
 	// @+
 	NFA *at = init_thompson_nfa('@');
@@ -401,6 +420,17 @@ void test_graphviz_other_quantifiers(void)
 	maybe_and = transform(maybe_and, '?');
 	gen_nfa_graphviz(maybe_and, "dots/maybe_and.dot");
 	destroy_nfa_and_states(maybe_and);
+
+	// \t*
+	NFA *any_tabs = init_thompson_nfa('\t');
+	any_tabs = transform(any_tabs, '*');
+	gen_nfa_graphviz(any_tabs, "dots/any_tabs.dot");
+	destroy_nfa_and_states(any_tabs);
+
+	// \n
+	NFA *newline = init_thompson_nfa('\n');
+	gen_nfa_graphviz(newline, "dots/newline.dot");
+	destroy_nfa_and_states(newline);
 }
 
 void test_epsilon_closure(void)
@@ -452,7 +482,7 @@ int main(void)
 	RUN_TEST(test_transform);
 	RUN_TEST(test_init_range_nfa);
 	RUN_TEST(test_index_states_and_gen_graphviz);
-	RUN_TEST(test_graphviz_other_quantifiers);
+	RUN_TEST(test_graphviz_other);
 	RUN_TEST(test_epsilon_closure);
 
 	return UNITY_END();

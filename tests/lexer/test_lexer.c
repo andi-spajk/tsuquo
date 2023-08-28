@@ -36,7 +36,7 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_INT(0, read_file(cc, "../example.txt"));
 	TEST_ASSERT_EQUAL_UINT8('a', lex(cc));
 	TEST_ASSERT_EQUAL_UINT8('a', cc->token);
-	cc->flags |= CC_DISABLE_ERROR_SUPPLEMENT;
+	cc->flags |= CC_DISABLE_INSTEAD_FOUND;
 	print_error(cc, "blblblblbl");
 	TEST_ASSERT_EQUAL_UINT8(TK_LPAREN, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_LPAREN, cc->token);

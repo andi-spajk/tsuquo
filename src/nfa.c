@@ -377,14 +377,28 @@ static void graphviz_helper(NFAState *state, FILE *f)
 		fprintf(f, "\tn%d", state->index);
 		fprintf(f, " ->");
 		fprintf(f, " n%d", state->out1->index);
-		if (state->ch == EPSILON)
+		switch (state->ch) {
+		case EPSILON:
 			fprintf(f, " [label=\"&epsilon;\"]\n");
-		else if (state->ch == '"')
+			break;
+		case '"':
 			fprintf(f, " [label=\"\\\"\"]\n");
-		else if (state->ch == '\\')
+			break;
+		case '\\':
+			// double backslash because we are representing a string
+			// in a string
 			fprintf(f, " [label=\"\\\\\"]\n");
-		else
+			break;
+		case '\t':
+			fprintf(f, " [label=\"\\\\t\"]\n");
+			break;
+		case '\n':
+			fprintf(f, " [label=\"\\\\n\"]\n");
+			break;
+		default:
 			fprintf(f, " [label=\"%c\"]\n", state->ch);
+			break;
+		}
 		// we printed transition, but only perform the transition if the
 		// out state hasn't been tagged as seen
 		if (!state->out1->seen)
