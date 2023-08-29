@@ -492,7 +492,8 @@ static Set *epsilon_helper(NFAState *state, Set *set)
 
 	@return         set of states in the epsilon closure of @state
 
-	Find the epsilon closure of an NFA state.
+	Find the epsilon closure of an NFA state. The NFA state itself is also
+	included.
 */
 Set *epsilon_closure(NFAState *state)
 {

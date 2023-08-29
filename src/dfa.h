@@ -52,4 +52,6 @@ void destroy_dfastate(DFAState *state);
 DFA *init_dfa(NFA *nfa);
 void destroy_dfa(DFA *dfa);
 
+Set *epsilon_closure_delta(Set *nfastates, U8 ch);
+
 #endif

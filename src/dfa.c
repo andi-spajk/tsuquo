@@ -161,3 +161,29 @@ void destroy_dfa(DFA *dfa)
 
 	free(dfa);
 }
+
+/* epsilon_closure_delta
+	@nfastates      set of NFAStates
+	@ch             transition character
+
+	@return         set of NFA states reachable from @nfastates via @ch
+
+	For each state in @nfastates, transition on @ch and find the epsilon
+	closure of that transition (if any). Aggregate all the epsilon closures
+	into one set.
+*/
+Set *epsilon_closure_delta(Set *nfastates, U8 ch)
+{
+	Set *result = init_set(compare_nfa_states);
+	Set *epsilon;
+	NFAState *nfastate;
+	for (Iterator *it = set_begin(nfastates); it; advance_iter(&it)) {
+		nfastate = (NFAState *)(it->element);
+		if (nfastate->ch == ch) {
+			epsilon = epsilon_closure(nfastate->out1);
+			result = set_union(result, epsilon);
+			destroy_set(epsilon);
+		}
+	}
+	return result;
+}
