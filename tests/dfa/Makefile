@@ -7,22 +7,24 @@ CFLAGS += -I$(SRC)
 
 UNITY_SRC = ../../unity
 UNITY_DEP = $(OBJ)/unity.o
-DEP = $(addprefix $(OBJ)/,test_control.o control.o)
-HEADERS = $(addprefix $(SRC)/,common.h control.h)
+DEP = $(addprefix $(OBJ)/,test_dfa.o dfa.o nfa.o set.o)
+HEADERS = $(addprefix $(SRC)/,common.h dfa.h nfa.h set.h)
 
 .PHONY: all clean
 
-all: test_control
+all: test_dfa
 
 $(OBJ):
 	mkdir -p $@
 
-test_control: $(DEP) $(UNITY_DEP) $(HEADERS)
+test_dfa: $(DEP) $(UNITY_DEP) $(HEADERS)
+	#mkdir -p dots
+	#mkdir -p svgs
 	$(CC) $(CFLAGS) $(DEP) $(UNITY_DEP) -o $@
 
-$(OBJ)/test_control.o: test_control.c | $(OBJ)
+$(OBJ)/test_dfa.o: test_dfa.c | $(OBJ)
 	$(CC) $(CFLAGS) -c $<
-	mv test_control.o $(OBJ)
+	mv test_dfa.o $(OBJ)
 
 $(UNITY_DEP): $(UNITY_SRC)/unity.c
 	$(CC) $(CFLAGS) -c $<
@@ -33,4 +35,4 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 	mv *.o $(OBJ)
 
 clean:
-	rm $(DEP) $(UNITY_DEP) test_control -rf
+	rm $(DEP) $(UNITY_DEP) test_dfa -rf

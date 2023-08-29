@@ -11,3 +11,4 @@ tests/parser/test_parser
 tests/parser/dots
 tests/parser/svgs
 tests/control/test_control
+tests/dfa/test_dfa

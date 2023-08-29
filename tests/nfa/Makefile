@@ -8,7 +8,7 @@ CFLAGS += -I$(SRC)
 UNITY_SRC = ../../unity
 UNITY_DEP = $(OBJ)/unity.o
 DEP = $(addprefix $(OBJ)/,test_nfa.o nfa.o set.o)
-HEADERS = $(addprefix $(SRC)/,nfa.h set.h)
+HEADERS = $(addprefix $(SRC)/,common.h nfa.h set.h)
 
 .PHONY: all clean
 
@@ -36,3 +36,5 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 
 clean:
 	rm $(DEP) $(UNITY_DEP) test_nfa -rf
+	rm dots/* -rf
+	rm svgs/* -rf

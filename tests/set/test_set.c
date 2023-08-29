@@ -280,6 +280,55 @@ void test_iterators(void)
 	destroy_set(s);
 }
 
+void test_compare_sets(void)
+{
+	Set *setset = init_set(compare_sets);
+	TEST_ASSERT_NOT_NULL(setset);
+
+	Set *s1 = init_set(compare_ints);
+	TEST_ASSERT_NOT_NULL(s1);
+	Set *s2 = init_set(compare_ints);
+	TEST_ASSERT_NOT_NULL(s2);
+	Set *s3 = init_set(compare_ints);
+	TEST_ASSERT_NOT_NULL(s3);
+
+	int n0 = 0;
+	int n1 = 1;
+	int n2 = 2;
+	int n3 = 3;
+	int n0_different_addr = 0;
+
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s1, &n0));
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s1, &n1));
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s1, &n2));
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s1, &n3));
+
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s2, &n0_different_addr));
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s2, &n1));
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s2, &n2));
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s2, &n3));
+
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s3, &n1));
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(s3, &n3));
+
+	TEST_ASSERT_EQUAL_INT(0, compare_sets(s1, s2));
+	TEST_ASSERT_EQUAL_INT(1, compare_sets(s1, s3));
+	TEST_ASSERT_EQUAL_INT(1, compare_sets(s2, s3));
+
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(setset, s1));
+	TEST_ASSERT_TRUE(set_find(setset, s2));
+	TEST_ASSERT_EQUAL_INT(INSERT_DUPLICATE, set_insert(setset, s2));
+	TEST_ASSERT_FALSE(set_find(setset, s3));
+	TEST_ASSERT_EQUAL_INT(INSERT_SUCCESS, set_insert(setset, s3));
+	TEST_ASSERT_TRUE(set_find(setset, s3));
+	TEST_ASSERT_EQUAL_INT(2, setset->size);
+
+	destroy_set(setset);
+	destroy_set(s1);
+	destroy_set(s2);
+	destroy_set(s3);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -292,6 +341,7 @@ int main(void)
 	RUN_TEST(test_set_equals);
 	RUN_TEST(test_set_union);
 	RUN_TEST(test_iterators);
+	RUN_TEST(test_compare_sets);
 
 	return UNITY_END();
 }

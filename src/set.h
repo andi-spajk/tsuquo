@@ -72,4 +72,6 @@ Set *set_union(Set *lhs, Set *rhs);
 Iterator *set_begin(Set *set);
 Iterator *advance_iter(Iterator **it);
 
+int compare_sets(const void *s1, const void *s2);
+
 #endif

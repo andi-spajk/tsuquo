@@ -276,3 +276,23 @@ Iterator *advance_iter(Iterator **it)
 	}
 	return NULL;
 }
+
+/* compare_sets()
+	@s1             ptr to Set of sets
+	@s2             ptr to another Set of sets
+
+	@return         value indicating the following:
+	                =1: s1 and s2 contain different sets
+	                =0: s1 and s2 contain identical sets
+
+	Compare whether two sets of sets contain all the same sets.
+*/
+int compare_sets(const void *s1, const void *s2)
+{
+	if (set_equals((Set *)s1, (Set *)s2))
+		return 0;
+	return 1;
+	// positive result means we will insert as soon as possible since >0 is
+	// the first condition that set_insert() checks
+	// we don't care about sorting the set of sets
+}
