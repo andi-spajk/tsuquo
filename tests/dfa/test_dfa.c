@@ -1,4 +1,5 @@
 #include "../../unity/unity.h"
+#include "control.h"
 #include "dfa.h"
 #include "nfa.h"
 #include "parser.h"
@@ -22,8 +23,8 @@ void test_inits(void)
 
 	DFAState *state = init_dfastate(dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(-1, state->index);
-	TEST_ASSERT_TRUE(set_is_empty(state->constituent_nfas));
 	TEST_ASSERT_FALSE(state->seen);
+	TEST_ASSERT_NULL(state->outs[0]);
 
 	destroy_dfa(dfa);
 	destroy_dfastate(state);
@@ -44,8 +45,9 @@ void test_inits(void)
 
 	state = init_dfastate(dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(-1, state->index);
-	TEST_ASSERT_TRUE(set_is_empty(state->constituent_nfas));
 	TEST_ASSERT_FALSE(state->seen);
+	TEST_ASSERT_NULL(state->outs[0]);
+	TEST_ASSERT_NULL(state->outs[1]);
 
 	destroy_dfa(dfa);
 	destroy_dfastate(state);
@@ -54,7 +56,7 @@ void test_inits(void)
 
 void test_epsilon_closure_delta(void)
 {
-	// see /nfa/svgs/cooper_torczon_example2.5.svg
+	// see /tests/nfa/svgs/cooper_torczon_example2.5.svg
 	// a(b|c)*
 	// build this in steps without parser because I need to save a reference
 	// to one of the states in the middle and I'd rather not access it by
@@ -116,6 +118,8 @@ void test_epsilon_closure_delta(void)
 	destroy_set(q0);
 	destroy_set(eps_on_b);
 
+	// see /tests/parser/svgs/test_20.svg
+	// gray|grey
 	CmpCtrl *cc = init_cmpctrl();
 	read_line(cc, "gray|grey", 9);
 	regex = parse(cc);
@@ -137,12 +141,68 @@ void test_epsilon_closure_delta(void)
 	destroy_set(eps_on_g);
 }
 
+void test_subset(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+	NFA *nfa;
+	read_line(cc, "a(b|c)*", 7);
+	nfa = parse(cc);
+	index_states(nfa);
+
+	DFA *dfa = subset(nfa);
+	TEST_ASSERT_NOT_NULL(dfa);
+	TEST_ASSERT_EQUAL_INT(3, dfa->alphabet_size);
+	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
+	TEST_ASSERT_EQUAL_INT(4, dfa->mem_region->size);
+	int a = 0;
+	int b = 1;
+	int c = 2;
+	TEST_ASSERT_EQUAL_UINT8('a', dfa->alphabet[a]);
+	TEST_ASSERT_EQUAL_UINT8('b', dfa->alphabet[b]);
+	TEST_ASSERT_EQUAL_UINT8('c', dfa->alphabet[c]);
+
+	DFAState *d0 = dfa->start;
+	TEST_ASSERT_NOT_NULL(d0->outs[a]);
+	TEST_ASSERT_NULL(d0->outs[b]);
+	TEST_ASSERT_NULL(d0->outs[c]);
+	TEST_ASSERT_EQUAL_INT(1, d0->constituent_nfastates->size);
+
+	DFAState *d1 = d0->outs[a];
+	DFAState *d2 = d1->outs[b];
+	DFAState *d3 = d1->outs[c];
+	TEST_ASSERT_NULL(d1->outs[a]);
+	TEST_ASSERT_NOT_NULL(d1->outs[b]);
+	TEST_ASSERT_NOT_NULL(d1->outs[c]);
+	TEST_ASSERT_EQUAL_INT(6, d1->constituent_nfastates->size);
+
+	TEST_ASSERT_NULL(d2->outs[a]);
+	TEST_ASSERT_NULL(d3->outs[a]);
+
+	TEST_ASSERT_EQUAL_PTR(d2, d2->outs[b]);
+	TEST_ASSERT_EQUAL_PTR(d2, d3->outs[b]);
+	TEST_ASSERT_EQUAL_INT(6, d2->constituent_nfastates->size);
+	TEST_ASSERT_EQUAL_PTR(d3, d3->outs[c]);
+	TEST_ASSERT_EQUAL_PTR(d3, d2->outs[c]);
+	TEST_ASSERT_EQUAL_INT(6, d3->constituent_nfastates->size);
+
+	TEST_ASSERT_FALSE(set_find(dfa->accepts, d0));
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d1));
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d2));
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d3));
+	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_cmpctrl(cc);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
 
 	RUN_TEST(test_inits);
 	RUN_TEST(test_epsilon_closure_delta);
+	RUN_TEST(test_subset);
 
 	return UNITY_END();
 }

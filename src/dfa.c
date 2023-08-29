@@ -27,13 +27,18 @@ DFAState *init_dfastate(int alphabet_size)
 		return NULL;
 
 	state->outs = calloc(alphabet_size, sizeof(DFAState *));
-	state->constituent_nfas = init_set(compare_nfa_states);
-	if (!(state->outs || state->constituent_nfas)) {
+	if (!state->outs) {
 		free(state->outs);
-		destroy_set(state->constituent_nfas);
 		free(state);
 		return NULL;
 	}
+
+	// constituent_nfastates is NOT allocated by the DFAState
+	// We can't figure out the constituent NFA states UNTIL we are doing
+	// the subset construction.
+	// So subset should assigns the set to the DFA state's pointer.
+	// If we initialize a set in here, we will leak memory when the subset
+	// assigns the actual set of constituent NFAStates.
 
 	state->index = -1;
 	return state;
@@ -49,8 +54,9 @@ void destroy_dfastate(DFAState *state)
 	if (!state)
 		return;
 	free(state->outs);
-	// freeing the actual nfastates is done by the NFA module
-	destroy_set(state->constituent_nfas);
+	// DFAState is doubly-linked to a set of NFAStates
+	// the dfa->mem_region stores a set of these sets of NFAStates
+	// destroy_dfa will handle them and the DFAStates
 	free(state);
 }
 
@@ -151,11 +157,14 @@ void destroy_dfa(DFA *dfa)
 	free(dfa->alphabet);
 	destroy_set(dfa->accepts);
 
-	// for each set of sets of nfastates
+	// for each set in the set of sets of nfastates
+	Set *qset;
 	for (Iterator *q = set_begin(dfa->mem_region); q; advance_iter(&q)) {
-		// destroy the corresponding dfastate of the set
-		destroy_dfastate(((Set *)q)->id);
-		destroy_set((Set *)q);
+		qset = (Set *)(q->element);
+		// destroy the dfastate corresponding to the set of nfastates
+		destroy_dfastate((DFAState *)(qset->id));
+		// destroy the set of nfastates
+		destroy_set(qset);
 	}
 	destroy_set(dfa->mem_region);
 
@@ -186,4 +195,84 @@ Set *epsilon_closure_delta(Set *nfastates, U8 ch)
 		}
 	}
 	return result;
+}
+
+/* subset()
+	@nfa            ptr to NFA struct
+
+	@return         the NFA's equivalent DFA
+
+	Convert an NFA to a DFA.
+*/
+DFA *subset(NFA *nfa)
+{
+	DFA *dfa = init_dfa(nfa);
+	int state_index = 0;
+
+	DFAState *start = init_dfastate(dfa->alphabet_size);
+	start->index = state_index;
+	state_index++;
+	dfa->start = start;
+
+	Set *q0 = epsilon_closure(nfa->start);
+	// doubly link the DFA state and the set of NFA states
+	q0->id = start;
+	start->constituent_nfastates = q0;
+	if (set_find(q0, nfa->accept))
+		set_insert(dfa->accepts, q0->id);
+	set_insert(dfa->mem_region, q0);
+
+	Set *worklist = init_set(compare_sets);
+	set_insert(worklist, q0);
+
+	Set *q, *t, *found;
+	DFAState *new, *qstate;
+	U8 ch;
+	while (!set_is_empty(worklist)) {
+		q = set_decapitate(worklist);
+		qstate = (DFAState *)(q->id);
+		for (int i = 0; i < dfa->alphabet_size; i++) {
+			ch = dfa->alphabet[i];
+			t = epsilon_closure_delta(q, ch);
+			if (set_is_empty(t)) {
+				destroy_set(t);
+				continue;
+			}
+			found = set_find(dfa->mem_region, t);
+			if (!found) {
+				// t represents a new DFA state
+				new = init_dfastate(dfa->alphabet_size);
+				new->index = state_index;
+				state_index++;
+				// doubly link the DFA state with the set of NFA
+				// states
+				t->id = new;
+				new->constituent_nfastates = t;
+
+				// q transitions to t via ch
+				qstate->outs[i] = (DFAState *)(t->id);
+
+				if (set_find(t, nfa->accept))
+					set_insert(dfa->accepts, t->id);
+				set_insert(dfa->mem_region, t);
+				set_insert(worklist, t);
+			} else {
+				// t represents an already-existing DFA state
+/*
+Use found, not q.
+We used q to build every t in this for loop, but q and t do not have the same
+corresponding DFAState.
+We used the same q for each t, BUT A DIFFERENT ch FOR EACH t.
+So q may be transitioning to itself but it also may not.
+Oh my god this mistake is so obvious in hindsight. Wtf was I thinking???
+*/
+				qstate->outs[i] = (DFAState *)(found->id);
+				if (set_find(found, nfa->accept))
+					set_insert(dfa->accepts, found->id);
+				destroy_set(t);
+			}
+		}
+	}
+	destroy_set(worklist);
+	return dfa;
 }

@@ -16,13 +16,13 @@ Module definition for deterministic finite automata.
 #define NUM_ASCII_CHARS 128
 
 typedef struct DFAState {
-	struct DFAState *outs;  // array of outward transitions
+	struct DFAState **outs;  // array of outward transitions
 	int index;
-	Set *constituent_nfas;
+	Set *constituent_nfastates;
 	/*
 	Subset construction builds DFAStates using sets of sets of NFA states
 	Those sets and their corresponding DFAState shall be doubly-linked, eg:
-		some_dfastate->constituent_nfas = some_set
+		some_dfastate->constituent_nfastates = some_set
 		some_set->id = some_dfastate
 	*/
 	bool seen;
@@ -53,5 +53,6 @@ DFA *init_dfa(NFA *nfa);
 void destroy_dfa(DFA *dfa);
 
 Set *epsilon_closure_delta(Set *nfastates, U8 ch);
+DFA *subset(NFA *nfa);
 
 #endif
