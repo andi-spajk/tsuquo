@@ -68,7 +68,11 @@ void test_epsilon_closure_delta(void)
 	NFA *b_c = nfa_union(b, c);
 	b_c = transform(b_c, '*');
 	regex = nfa_append(regex, b_c);
+
+
+	// ********!!!DO NOT FORGET THIS!!!********
 	index_states(regex);
+	// ********!!!DO NOT FORGET THIS!!!********
 
 	Set *q0 = epsilon_closure(regex->start);
 	Set *eps_on_a = epsilon_closure_delta(q0, 'b');
@@ -123,7 +127,10 @@ void test_epsilon_closure_delta(void)
 	CmpCtrl *cc = init_cmpctrl();
 	read_line(cc, "gray|grey", 9);
 	regex = parse(cc);
+
+	// ********!!!DO NOT FORGET THIS!!!********
 	index_states(regex);
+	// ********!!!DO NOT FORGET THIS!!!********
 
 	q0 = epsilon_closure(regex->start);
 	TEST_ASSERT_EQUAL_INT(3, q0->size);
@@ -143,11 +150,15 @@ void test_epsilon_closure_delta(void)
 
 void test_subset(void)
 {
+	DFAState *d0, *d1, *d2, *d3, *d4, *d5, *d6, *d7, *d8;
 	CmpCtrl *cc = init_cmpctrl();
 	NFA *nfa;
 	read_line(cc, "a(b|c)*", 7);
 	nfa = parse(cc);
+
+	// ********!!!DO NOT FORGET THIS!!!********
 	index_states(nfa);
+	// ********!!!DO NOT FORGET THIS!!!********
 
 	DFA *dfa = subset(nfa);
 	TEST_ASSERT_NOT_NULL(dfa);
@@ -161,15 +172,18 @@ void test_subset(void)
 	TEST_ASSERT_EQUAL_UINT8('b', dfa->alphabet[b]);
 	TEST_ASSERT_EQUAL_UINT8('c', dfa->alphabet[c]);
 
-	DFAState *d0 = dfa->start;
+	// the d0, d1, d2 etc numbering may not reflect the actual dfa state
+	// indices that are produced by subset()
+	// i number them for these tests just for convenience
+	d0 = dfa->start;
 	TEST_ASSERT_NOT_NULL(d0->outs[a]);
 	TEST_ASSERT_NULL(d0->outs[b]);
 	TEST_ASSERT_NULL(d0->outs[c]);
 	TEST_ASSERT_EQUAL_INT(1, d0->constituent_nfastates->size);
 
-	DFAState *d1 = d0->outs[a];
-	DFAState *d2 = d1->outs[b];
-	DFAState *d3 = d1->outs[c];
+	d1 = d0->outs[a];
+	d2 = d1->outs[b];
+	d3 = d1->outs[c];
 	TEST_ASSERT_NULL(d1->outs[a]);
 	TEST_ASSERT_NOT_NULL(d1->outs[b]);
 	TEST_ASSERT_NOT_NULL(d1->outs[c]);
@@ -190,6 +204,134 @@ void test_subset(void)
 	TEST_ASSERT_TRUE(set_find(dfa->accepts, d2));
 	TEST_ASSERT_TRUE(set_find(dfa->accepts, d3));
 	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+
+	read_line(cc, "who|what|where", 14);
+	nfa = parse(cc);
+
+	// ********!!!DO NOT FORGET THIS!!!********
+	index_states(nfa);
+	// ********!!!DO NOT FORGET THIS!!!********
+
+	dfa = subset(nfa);
+	TEST_ASSERT_NOT_NULL(dfa);
+	TEST_ASSERT_EQUAL_INT(7, dfa->alphabet_size);
+	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
+	TEST_ASSERT_EQUAL_INT(9, dfa->mem_region->size);
+
+	//             0 1 2 3 4 5 6
+	// alphabet = {a,e,h,o,r,t,w}
+	d0 = dfa->start;
+	TEST_ASSERT_NOT_NULL(d0->outs[dfa->mappings['w']]);
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, d0->outs, 6);
+	TEST_ASSERT_EQUAL_INT(5, d0->constituent_nfastates->size);
+	TEST_ASSERT_FALSE(set_find(dfa->accepts, d0));
+
+	d1 = d0->outs[dfa->mappings['w']];
+	TEST_ASSERT_NOT_NULL(d1->outs[dfa->mappings['h']]);
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, d1->outs, 2);  // a e
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, &(d1->outs[3]), 4);  // o r t w
+	TEST_ASSERT_EQUAL_INT(6, d1->constituent_nfastates->size);
+	TEST_ASSERT_FALSE(set_find(dfa->accepts, d1));
+
+	d2 = d1->outs[dfa->mappings['h']];
+	d3 = d2->outs[dfa->mappings['a']];
+	d4 = d2->outs[dfa->mappings['e']];
+	d5 = d2->outs[dfa->mappings['o']];
+	TEST_ASSERT_NOT_NULL(d3);  // a
+	TEST_ASSERT_NOT_NULL(d4);  // e
+	TEST_ASSERT_NOT_NULL(d5);  // o
+	TEST_ASSERT_NULL(d2->outs[dfa->mappings['h']]);
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, &(d2->outs[4]), 3);  // r t w
+	TEST_ASSERT_EQUAL_INT(6, d2->constituent_nfastates->size);
+	TEST_ASSERT_FALSE(set_find(dfa->accepts, d2));
+
+	d6 = d3->outs[dfa->mappings['t']];
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, d3->outs, 5); // a e h o r
+	TEST_ASSERT_NULL(d3->outs[dfa->mappings['w']]);
+	// don't test constituent_nfastates since parse() may not group the
+	// unions in the same way i do
+	// let's hope that the future graphviz tests confirm the DFA correctness
+	// with 100% certainty
+	TEST_ASSERT_FALSE(set_find(dfa->accepts, d3));
+
+	d7 = d4->outs[dfa->mappings['r']];
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, d4->outs, 4); // a e h o
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, &(d4->outs[5]), 2); // t w
+	TEST_ASSERT_FALSE(set_find(dfa->accepts, d4));
+
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, d5->outs, 7);
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d5));
+
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, d6->outs, 7);
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d6));
+
+	d8 = d7->outs[dfa->mappings['e']];
+	TEST_ASSERT_NULL(d7->outs[dfa->mappings['a']]);
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, &(d7->outs[2]), 5); // h o r t w
+	TEST_ASSERT_FALSE(set_find(dfa->accepts, d7));
+
+	TEST_ASSERT_EACH_EQUAL_PTR(NULL, d8->outs, 7);
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d8));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+
+	read_line(cc, "(ab|ac)*", 8);
+	nfa = parse(cc);
+
+	// ********!!!DO NOT FORGET THIS!!!********
+	index_states(nfa);
+	// ********!!!DO NOT FORGET THIS!!!********
+
+	dfa = subset(nfa);
+	TEST_ASSERT_NOT_NULL(dfa);
+	TEST_ASSERT_EQUAL_INT(3, dfa->alphabet_size);
+	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
+	TEST_ASSERT_EQUAL_INT(4, dfa->mem_region->size);
+
+	d0 = dfa->start;
+	TEST_ASSERT_NOT_NULL(d0->outs[a]);
+	TEST_ASSERT_NULL(d0->outs[b]);
+	TEST_ASSERT_NULL(d0->outs[c]);
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d0));
+
+	d1 = d0->outs[a];
+	d2 = d1->outs[b];
+	d3 = d1->outs[c];
+	TEST_ASSERT_NULL(d1->outs[a]);
+	TEST_ASSERT_NOT_NULL(d2);
+	TEST_ASSERT_NOT_NULL(d3);
+	TEST_ASSERT_FALSE(set_find(dfa->accepts, d1));
+
+	TEST_ASSERT_EQUAL_PTR(d1, d2->outs[a]);
+	TEST_ASSERT_NULL(d2->outs[b]);
+	TEST_ASSERT_NULL(d2->outs[c]);
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d2));
+
+	TEST_ASSERT_EQUAL_PTR(d1, d3->outs[a]);
+	TEST_ASSERT_NULL(d3->outs[b]);
+	TEST_ASSERT_NULL(d3->outs[c]);
+	TEST_ASSERT_TRUE(set_find(dfa->accepts, d3));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+
+	read_line(cc, "(0|1)*11001*", 12);
+	nfa = parse(cc);
+
+	// ********!!!DO NOT FORGET THIS!!!********
+	index_states(nfa);
+	// ********!!!DO NOT FORGET THIS!!!********
+
+	dfa = subset(nfa);
+	TEST_ASSERT_NOT_NULL(dfa);
+	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
+	TEST_ASSERT_EQUAL_INT(8, dfa->mem_region->size);
+
+	// too lazy
 
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);

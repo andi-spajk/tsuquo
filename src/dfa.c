@@ -273,6 +273,7 @@ Oh my god this mistake is so obvious in hindsight. Wtf was I thinking???
 			}
 		}
 	}
+	// empty worklist can be safely destroyed without leaking anything
 	destroy_set(worklist);
 	return dfa;
 }
