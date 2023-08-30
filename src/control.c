@@ -62,7 +62,8 @@ int read_file(CmpCtrl *cc, const char *file_name)
 	cc->buffer = malloc(fsize);
 	if (!cc->buffer)
 		return -1;
-	fread(cc->buffer, 1, fsize, f);
+	if (fread(cc->buffer, 1, fsize, f) != (size_t)fsize)
+		return -1;
 
 	cc->buffer_len = fsize;
 	// don't forget to reset position

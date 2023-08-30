@@ -119,13 +119,35 @@ void print_error(const CmpCtrl *cc, const char *msg)
 	fwrite(cc->buffer, 1, cc->buffer_len, stdout);
 	putchar('\n');
 
-	// error arrow
-	// cc->pos always sits one char ahead of the previously fetched token...
-	for (int i = 0; i < cc->pos-1; i++)
+	// align error arrow with spaces, must handle 8-width tabs
+	int num_spaces = 0;
+	int tab_align = 0;
+	// use pos-1 because pos always sits one char ahead of the previously
+	// fetched token, which receives the error arrow
+	for (int i = 0; i < cc->pos-1; i++) {
+		if (tab_align == 8)
+			tab_align = 0;
+
+		if (cc->buffer[i] == '\t') {
+			for (int j = 0; j < (8 - tab_align); j++)
+				num_spaces++;
+			tab_align = 0;
+		} else {
+			num_spaces++;
+			tab_align++;
+		}
+	}
+
+	for (int i = 0; i < num_spaces; i++)
 		putchar(' ');
-	// ...unless the previous token was EOF. Then putting the arrow at only
-	// pos-1 won't point past the input, so add extra space
+
+	// if the previous token was EOF, arrow belongs to the space right after
+	// the end of everything (at index=pos)
+	// but last char is index=pos-1 so putting the arrow there won't point
+	// at EOF
+	// so add extra space
 	if (cc->token == TK_EOF)
 		putchar(' ');
+
 	printf("^\n\n");
 }

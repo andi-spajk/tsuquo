@@ -1,6 +1,8 @@
 obj/
+release/
 pseudo/
 main
+debug
 
 tests/lexer/test_lexer
 
