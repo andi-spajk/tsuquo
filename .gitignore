@@ -3,12 +3,19 @@ pseudo/
 main
 
 tests/lexer/test_lexer
+
 tests/set/test_set
+
 tests/nfa/test_nfa
 tests/nfa/dots
 tests/nfa/svgs
+
 tests/parser/test_parser
 tests/parser/dots
 tests/parser/svgs
+
 tests/control/test_control
+
 tests/dfa/test_dfa
+tests/dfa/dots
+tests/dfa/svgs

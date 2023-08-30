@@ -36,6 +36,8 @@ U8 get_char(CmpCtrl *cc)
 U8 lex(CmpCtrl *cc)
 {
 	U8 ch = get_char(cc);
+
+	// ignore literal newlines
 	if (ch == '\r')
 		ch = get_char(cc);
 	if (ch == '\n')
@@ -118,9 +120,11 @@ void print_error(const CmpCtrl *cc, const char *msg)
 	putchar('\n');
 
 	// error arrow
-	// cc->pos always sits one char ahead of the previously fetched token
+	// cc->pos always sits one char ahead of the previously fetched token...
 	for (int i = 0; i < cc->pos-1; i++)
 		putchar(' ');
+	// ...unless the previous token was EOF. Then putting the arrow at only
+	// pos-1 won't point past the input, so add extra space
 	if (cc->token == TK_EOF)
 		putchar(' ');
 	printf("^\n\n");

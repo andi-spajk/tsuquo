@@ -20,8 +20,8 @@ $(OBJ):
 	mkdir -p $@
 
 test_dfa: $(DEP) $(UNITY_DEP) $(HEADERS)
-	#mkdir -p dots
-	#mkdir -p svgs
+	mkdir -p dots
+	mkdir -p svgs
 	$(CC) $(CFLAGS) $(DEP) $(UNITY_DEP) -o $@
 
 $(OBJ)/test_dfa.o: test_dfa.c | $(OBJ)
@@ -38,3 +38,5 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 
 clean:
 	rm $(DEP) $(UNITY_DEP) test_dfa -rf
+	rm dots/* -rf
+	rm svgs/* -rf

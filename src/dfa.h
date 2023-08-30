@@ -25,7 +25,7 @@ typedef struct DFAState {
 		some_dfastate->constituent_nfastates = some_set
 		some_set->id = some_dfastate
 	*/
-	bool seen;
+	bool is_accept;
 } DFAState;
 
 typedef struct DFA {
@@ -54,5 +54,7 @@ void destroy_dfa(DFA *dfa);
 
 Set *epsilon_closure_delta(Set *nfastates, U8 ch);
 DFA *subset(NFA *nfa);
+
+int gen_dfa_graphviz(DFA *dfa, const char *file_name, bool include_nfastates);
 
 #endif

@@ -5,6 +5,8 @@ construction.
 
 */
 
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "common.h"
@@ -81,12 +83,12 @@ int compare_dfastates(const void *d1, const void *d2)
 
 	@return         number of 1-bits in the integer
 
-	Counts the number of 1 bits.
+	Counts the number of 1 bits in @x.
 
 	Taken from https://en.wikipedia.org/wiki/Hamming_weight
 	The NFA alphabet bitfield is likely to have large contiguous chunks of
 	1 bits. There will be large contiguous chunks of 0s, so I could use the
-	 Wegner algorithm, but there are very few chunks of 0s compared to the
+	Wegner algorithm, but there are very few chunks of 0s compared to the
 	amount of 1s. I would spend more time iterating over the chunk of 1s
 	even though there are lots of 0s.
 	So I opted for the popcount64c() implementation.
@@ -218,8 +220,10 @@ DFA *subset(NFA *nfa)
 	// doubly link the DFA state and the set of NFA states
 	q0->id = start;
 	start->constituent_nfastates = q0;
-	if (set_find(q0, nfa->accept))
-		set_insert(dfa->accepts, q0->id);
+	if (set_find(q0, nfa->accept)) {
+		start->is_accept = true;
+		set_insert(dfa->accepts, start);
+	}
 	set_insert(dfa->mem_region, q0);
 
 	Set *worklist = init_set(compare_sets);
@@ -252,8 +256,10 @@ DFA *subset(NFA *nfa)
 				// q transitions to t via ch
 				qstate->outs[i] = (DFAState *)(t->id);
 
-				if (set_find(t, nfa->accept))
+				if (set_find(t, nfa->accept)) {
+					new->is_accept = true;
 					set_insert(dfa->accepts, t->id);
+				}
 				set_insert(dfa->mem_region, t);
 				set_insert(worklist, t);
 			} else {
@@ -267,8 +273,10 @@ So q may be transitioning to itself but it also may not.
 Oh my god this mistake is so obvious in hindsight. Wtf was I thinking???
 */
 				qstate->outs[i] = (DFAState *)(found->id);
-				if (set_find(found, nfa->accept))
+				if (set_find(found, nfa->accept)) {
+					((DFAState *)(found->id))->is_accept = true;
 					set_insert(dfa->accepts, found->id);
+				}
 				destroy_set(t);
 			}
 		}
@@ -276,4 +284,122 @@ Oh my god this mistake is so obvious in hindsight. Wtf was I thinking???
 	// empty worklist can be safely destroyed without leaking anything
 	destroy_set(worklist);
 	return dfa;
+}
+
+/* print_constituent_nfastates()
+	@f              output dot file
+	@nfastates      ptr to Set of NFAStates
+
+	Print a node label that lists the constituent NFA states that
+	represent the node's DFAState.
+*/
+static void print_constituent_nfastates(FILE *f, Set *nfastates)
+{
+	fprintf(f, " [label=\"{");
+
+	Iterator *it = set_begin(nfastates);
+	NFAState *curr = (NFAState *)(it->element);
+	fprintf(f, "n%d", curr->index);
+	advance_iter(&it);
+
+	for (; it; advance_iter(&it)) {
+		curr = (NFAState *)(it->element);
+		fprintf(f, ", n%d", curr->index);
+	}
+	fprintf(f, "}\"]\n");
+}
+
+/* gen_dfa_graphviz()
+	@dfa                    ptr to DFA struct
+	@file_name              .dot file name
+	@include_nfastates      flag that toggles printing constituent NFAStates
+
+	@return         0 on success, otherwise -1
+
+	Generate a Graphviz dot representation of a DFA. Optionally, you can
+	include the constituent NFA states that represent each DFA state.
+*/
+int gen_dfa_graphviz(DFA *dfa, const char *file_name, bool include_nfastates)
+{
+	// DFA states were already indexed during subset()
+	FILE *f = fopen(file_name, "w");
+	if (!f)
+		return -1;
+
+	fprintf(f, "digraph DFA {\n");
+	fprintf(f, "\tfontname = \"Helvetica,Arial,sans-serif\"\n");
+	fprintf(f, "\tnode [fontname=\"Helvetica,Arial,sans-serif\"]\n");
+	fprintf(f, "\tedge [fontname=\"Helvetica,Arial,sans-serif\"]\n");
+	fprintf(f, "\trankdir = LR\n");
+	fprintf(f, "\n");
+
+	// print accept states
+	if (include_nfastates)
+		fprintf(f, "\tnode [shape=ellipse, peripheries=2]\n");
+	else
+		fprintf(f, "\tnode [shape=doublecircle]\n");
+	// double ellipse taken from // https://stackoverflow.com/a/41970975
+	DFAState *curr;
+	for (Iterator *it = set_begin(dfa->accepts); it; advance_iter(&it)) {
+		curr = (DFAState *)(it->element);
+		fprintf(f, "\td%d", curr->index);
+		if (include_nfastates)
+			print_constituent_nfastates(f, curr->constituent_nfastates);
+		else
+			fprintf(f, "\n");
+	}
+	fprintf(f, "\n");
+
+	// print normal states
+	if (include_nfastates)
+		fprintf(f, "\tnode [shape=ellipse, peripheries=1]\n");
+	else
+		fprintf(f, "\tnode [shape=circle]\n");
+	Iterator *q = set_begin(dfa->mem_region);
+	DFAState *currq;
+	for (; q; advance_iter(&q)) {
+		currq = (DFAState *)(((Set *)(q->element))->id);
+		if (!currq->is_accept) {
+			fprintf(f, "\td%d", currq->index);
+			if (include_nfastates)
+				print_constituent_nfastates(f, currq->constituent_nfastates);
+			else
+				fprintf(f, "\n");
+		}
+	}
+	fprintf(f, "\n");
+
+	// print transitions
+	q = set_begin(dfa->mem_region);
+	for (; q; advance_iter(&q)) {
+		currq = (DFAState *)(((Set *)(q->element))->id);
+		for (int i = 0; i < dfa->alphabet_size; i++) {
+			if (!currq->outs[i])
+				continue;
+			fprintf(f, "\td%d", currq->index);
+			fprintf(f, " ->");
+			fprintf(f, " d%d", currq->outs[i]->index);
+			switch (dfa->alphabet[i]) {
+			case '"':
+				fprintf(f, " [label=\"\\\"\"]\n");
+				break;
+			case '\\':
+				fprintf(f, " [label=\"\\\\\"]\n");
+				break;
+			case '\t':
+				fprintf(f, " [label=\"\\\\t\"]\n");
+				break;
+			case '\n':
+				fprintf(f, " [label=\"\\\\t\"]\n");
+				break;
+			default:
+				fprintf(f, " [label=\"%c\"]\n",
+				        dfa->alphabet[i]);
+				break;
+			}
+		}
+	}
+	fprintf(f, "}\n");
+	fclose(f);
+	return 0;
 }

@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include "../../unity/unity.h"
 #include "control.h"
 #include "dfa.h"
@@ -23,7 +25,7 @@ void test_inits(void)
 
 	DFAState *state = init_dfastate(dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(-1, state->index);
-	TEST_ASSERT_FALSE(state->seen);
+	TEST_ASSERT_FALSE(state->is_accept);
 	TEST_ASSERT_NULL(state->outs[0]);
 
 	destroy_dfa(dfa);
@@ -45,7 +47,7 @@ void test_inits(void)
 
 	state = init_dfastate(dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(-1, state->index);
-	TEST_ASSERT_FALSE(state->seen);
+	TEST_ASSERT_FALSE(state->is_accept);
 	TEST_ASSERT_NULL(state->outs[0]);
 	TEST_ASSERT_NULL(state->outs[1]);
 
@@ -338,6 +340,76 @@ void test_subset(void)
 	destroy_cmpctrl(cc);
 }
 
+void test_gen_graphviz(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+	read_line(cc, "who|what|where", 14);
+	NFA *nfa = parse(cc);
+	TEST_ASSERT_NOT_NULL(nfa);
+	index_states(nfa);
+	DFA *dfa = subset(nfa);
+	gen_dfa_graphviz(dfa, "dots/www_DFA.dot", false);
+	gen_dfa_graphviz(dfa, "dots/www_DFA_ellipses.dot", true);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+
+
+	// [\\"'\n\t]*
+	read_line(cc, "[\\\\\"'\\n\\t]*", 11);
+	nfa = parse(cc);
+	TEST_ASSERT_NOT_NULL(nfa);
+	index_states(nfa);
+	dfa = subset(nfa);
+	gen_dfa_graphviz(dfa, "dots/specials_DFA.dot", false);
+	gen_dfa_graphviz(dfa, "dots/specials_DFA_ellipses.dot", true);
+	// these look horrible
+	// probably I will add a disclaimer that generated dot files of
+	// unminimized DFAs will look like shit
+	// even worse if you have a range: the subset-built DFA is usually too
+	// large to draw sensibly
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+
+
+	read_line(cc, "(ab|ac)*", 8);
+	nfa = parse(cc);
+	TEST_ASSERT_NOT_NULL(nfa);
+	index_states(nfa);
+	dfa = subset(nfa);
+	gen_dfa_graphviz(dfa, "dots/abc_DFA.dot", false);
+	gen_dfa_graphviz(dfa, "dots/abc_DFA_ellipses.dot", true);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+
+
+	read_line(cc, "(0|1)*11001*", 12);
+	nfa = parse(cc);
+	TEST_ASSERT_NOT_NULL(nfa);
+	index_states(nfa);
+	dfa = subset(nfa);
+	gen_dfa_graphviz(dfa, "dots/zeroone_DFA.dot", false);
+	gen_dfa_graphviz(dfa, "dots/zeroone_DFA_ellipses.dot", true);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+
+
+	read_line(cc, "(01|10|00)*11", 13);
+	nfa = parse(cc);
+	TEST_ASSERT_NOT_NULL(nfa);
+	index_states(nfa);
+	dfa = subset(nfa);
+	gen_dfa_graphviz(dfa, "dots/zeroone2_DFA.dot", false);
+	gen_dfa_graphviz(dfa, "dots/zeroone2_DFA_ellipses.dot", true);
+
+	destroy_cmpctrl(cc);
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -345,6 +417,7 @@ int main(void)
 	RUN_TEST(test_inits);
 	RUN_TEST(test_epsilon_closure_delta);
 	RUN_TEST(test_subset);
+	RUN_TEST(test_gen_graphviz);
 
 	return UNITY_END();
 }
