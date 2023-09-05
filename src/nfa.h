@@ -30,8 +30,8 @@ typedef struct NFA {
 	U64 alphabet64_127;
 	int size;
 	Set *mem_region;  // set of all of ptrs to NFAStates in the NFA
-	                  // this region-based system simplifies cleanup of
-	                  // NFAStates
+	                  // this (kinda) region-based system simplifies cleanup
+	                  // of NFAStates
 } NFA;
 
 NFAState *init_nfastate(void);

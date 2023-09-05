@@ -40,7 +40,7 @@ typedef struct DFA {
 	Set of sets of NFAStates, usually denoted Q in formal contexts.
 	Each set corresponds to 1 DFAState (via set->id).
 	Since each set is doubly-linked with the DFAStates, the entire
-	collection can function as a region-based memory manager.
+	collection can function as a (sort of) region-based memory manager.
 	*/
 
 	U8 mappings[NUM_ASCII_CHARS];  // maps alphabet char to an index into

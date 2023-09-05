@@ -3,6 +3,9 @@ release/
 pseudo/
 main
 debug
+*.dot
+*.txt
+*.svg
 
 tests/lexer/test_lexer
 
@@ -21,3 +24,5 @@ tests/control/test_control
 tests/dfa/test_dfa
 tests/dfa/dots
 tests/dfa/svgs
+
+tests/minimize/test_minimize

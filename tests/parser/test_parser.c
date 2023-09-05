@@ -12,14 +12,6 @@
 	destroy_nfa_and_states((nfa)); \
 }
 
-#define TEST_ERROR_HELPER(cc, str, nfa) { \
-	printf("----------------------------------------" \
-	       "----------------------------------------\n"); \
-	read_line((cc), (str), sizeof((str))-1); \
-	(nfa) = parse((cc)); \
-	TEST_ASSERT_NULL((nfa)); \
-}
-
 #define SET_BIT(u64, i) (u64) |= (1ULL << (i))
 
 void setUp(void) {}
@@ -161,6 +153,14 @@ void test_parse(void)
 	TEST_PARSE_HELPER(cc, test_47, nfa, "dots/test_47.dot");
 
 	destroy_cmpctrl(cc);
+}
+
+#define TEST_ERROR_HELPER(cc, str, nfa) { \
+	printf("----------------------------------------" \
+	       "----------------------------------------\n"); \
+	read_line((cc), (str), sizeof((str))-1); \
+	(nfa) = parse((cc)); \
+	TEST_ASSERT_NULL((nfa)); \
 }
 
 void test_errors_and_recovery(void)

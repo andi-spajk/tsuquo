@@ -274,7 +274,7 @@ Oh my god this mistake is so obvious in hindsight. Wtf was I thinking???
 */
 				qstate->outs[i] = (DFAState *)(found->id);
 				if (set_find(found, nfa->accept)) {
-					((DFAState *)(found->id))->is_accept = true;
+					qstate->outs[i]->is_accept = true;
 					set_insert(dfa->accepts, found->id);
 				}
 				destroy_set(t);
