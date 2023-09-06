@@ -29,9 +29,9 @@ typedef struct NFA {
 	U64 alphabet0_63;  // store alphabet as a bitfield
 	U64 alphabet64_127;
 	int size;
-	Set *mem_region;  // set of all of ptrs to NFAStates in the NFA
-	                  // this (kinda) region-based system simplifies cleanup
-	                  // of NFAStates
+	Set *mem_region;  // set of ptrs for every NFAState in the NFA
+	                  // this (kinda) region-based memory system simplifies
+	                  // cleanup of NFAStates
 } NFA;
 
 NFAState *init_nfastate(void);
