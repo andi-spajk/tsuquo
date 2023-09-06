@@ -4,6 +4,7 @@ Minimize a deterministic finite automata.
 
 */
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "common.h"
@@ -138,4 +139,69 @@ void destroy_minimal_dfa(MinimalDFA *min_dfa)
 	destroy_set(min_dfa->mem_region);
 
 	free(min_dfa);
+}
+
+
+/* distinguishable()
+	@i              a DFA state index
+	@j              another DFA state index
+	@min_dfa        ptr to MinimalDFA struct
+	@dfa            ptr to DFA struct
+
+	@return         true if states i,j are distinguishable, otherwise false
+
+	Check whether two states are distinguishable according to the quotient
+	construction.
+
+	If only one of i,j is an accepting state, then they are distinguishable.
+	Otherwise, if some suffix causes only one of i,j to transition to an
+	accepting state, then they are distinguishable.
+	Otherwise, no such suffix exists. Then i,j are in the same equivalence
+	class, so they are indistinguishable.
+*/
+bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa)
+{
+	// a state is always indistinguishable with itself
+	// no suffix can ever distinguish a state from itself, because every
+	// suffix will generate the same transitions on i,j because i,j are
+	// the same state
+	if (i == j)
+		return false;
+
+	// dead/error state doesn't have a spot in the merge[][] table
+	if (i != DEAD_STATE && j != DEAD_STATE) {
+		// is the pair already marked?
+		if (!min_dfa->merge[i][j])
+			return false;
+	}
+
+	DFAState *accepti;
+	DFAState *acceptj;
+	if (i == DEAD_STATE)
+		accepti = NULL;
+	else
+		accepti = set_find(dfa->accepts, dfa->states[i]);
+	if (j == DEAD_STATE)
+		acceptj = NULL;
+	else
+		acceptj = set_find(dfa->accepts, dfa->states[j]);
+	int outi, outj;
+	if (!accepti ^ !acceptj) {
+		return true;
+	} else {
+		// recursively generate every suffix that could come out of
+		// states i,j
+		for (int c = 0; c < dfa->alphabet_size; c++) {
+			outi = i;
+			outj = j;
+			// don't index delta with -1
+			if (i != DEAD_STATE)
+				outi = dfa->delta[i][c];
+			if (j != DEAD_STATE)
+				outj = dfa->delta[j][c];
+			if (distinguishable(outi, outj, min_dfa, dfa))
+				return true;
+		}
+		return false;
+	}
 }

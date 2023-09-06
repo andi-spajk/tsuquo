@@ -265,6 +265,7 @@ DFA *subset(NFA *nfa)
 
 				// q transitions to t via ch
 				qstate->outs[i] = (DFAState *)(t->id);
+				// i automatically maps to an outs[] index
 
 				if (set_find(t, nfa->accept)) {
 					new->is_accept = true;
@@ -282,6 +283,7 @@ We used the same q for each t, BUT A DIFFERENT ch FOR EACH t.
 So q may be transitioning to itself but it also may not.
 Oh my god this mistake is so obvious in hindsight wtf was I thinking???
 */
+				// i automatically maps to an outs[] index
 				qstate->outs[i] = (DFAState *)(found->id);
 				if (set_find(found, nfa->accept)) {
 					qstate->outs[i]->is_accept = true;
@@ -346,7 +348,7 @@ DFA *convert_nfa_to_dfa(NFA *nfa)
 			if (out_state)
 				dfa->delta[curr_index][i] = out_state->index;
 			else
-				dfa->delta[curr_index][i] = -1;
+				dfa->delta[curr_index][i] = DEAD_STATE;
 		}
 		dfa->states[curr_index] = curr_state;
 	}
@@ -440,13 +442,15 @@ int gen_dfa_graphviz(DFA *dfa, const char *file_name, bool include_nfastates)
 	q = set_begin(dfa->mem_region);
 	for (; q; advance_iter(&q)) {
 		currq = (DFAState *)(((Set *)(q->element))->id);
-		for (int i = 0; i < dfa->alphabet_size; i++) {
-			if (!currq->outs[i])
+		for (int c = 0; c < dfa->alphabet_size; c++) {
+			if (!currq->outs[c])
 				continue;
 			fprintf(f, "\td%d", currq->index);
 			fprintf(f, " ->");
-			fprintf(f, " d%d", currq->outs[i]->index);
-			switch (dfa->alphabet[i]) {
+			// when we loop over the alphabet, the alphabet char is
+			// automatically mapped to an outs[] index (ie i)
+			fprintf(f, " d%d", currq->outs[c]->index);
+			switch (dfa->alphabet[c]) {
 			case '"':
 				fprintf(f, " [label=\"\\\"\"]\n");
 				break;
@@ -461,7 +465,7 @@ int gen_dfa_graphviz(DFA *dfa, const char *file_name, bool include_nfastates)
 				break;
 			default:
 				fprintf(f, " [label=\"%c\"]\n",
-				        dfa->alphabet[i]);
+				        dfa->alphabet[c]);
 				break;
 			}
 		}

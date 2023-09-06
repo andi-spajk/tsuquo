@@ -368,6 +368,7 @@ void test_convert_nfa_to_dfa(void)
 4 |    5
 5 |
 */
+	// -1 = dead/error state
 	int expected0[] = { 1,  2, -1,  3};
 	int expected1[] = {-1,  4, -1, -1};
 	int expected2[] = {-1,  2, -1,  3};

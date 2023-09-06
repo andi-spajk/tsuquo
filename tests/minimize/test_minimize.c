@@ -52,11 +52,34 @@ void test_inits(void)
 	destroy_minimal_dfa(min_dfa);
 }
 
+void test_distinguishable(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+	read_line(cc, "abc|[bx]*", 9);
+	NFA *nfa = parse(cc);
+	index_states(nfa);
+	DFA *dfa = convert_nfa_to_dfa(nfa);
+	MinimalDFA *min_dfa = init_minimal_dfa(dfa);
+
+	TEST_ASSERT_TRUE(distinguishable(0, 2, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(0, 3, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(0, 5, min_dfa, dfa));
+	TEST_ASSERT_FALSE(distinguishable(2, 3, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(2, 5, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(3, 5, min_dfa, dfa));
+
+	destroy_cmpctrl(cc);
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
 
 	RUN_TEST(test_inits);
+	RUN_TEST(test_distinguishable);
 
 	return UNITY_END();
 }

@@ -14,6 +14,7 @@ Module definition for deterministic finite automata.
 #include "set.h"
 
 #define NUM_ASCII_CHARS 128
+#define DEAD_STATE -1
 
 typedef struct DFAState {
 	struct DFAState **outs;  // array of outward transitions

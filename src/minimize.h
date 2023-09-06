@@ -74,4 +74,6 @@ void destroy_minimal_dfastate(MinimalDFAState *min_state);
 MinimalDFA *init_minimal_dfa(DFA *dfa);
 void destroy_minimal_dfa(MinimalDFA *min_dfa);
 
+bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa);
+
 #endif
