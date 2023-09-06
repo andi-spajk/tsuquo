@@ -477,7 +477,8 @@ int compare_nfastates(const void *n1, const void *n2)
 */
 static Set *epsilon_helper(NFAState *state, Set *set)
 {
-	set_insert(set, state);
+	if (set_insert(set, state) == INSERT_DUPLICATE)
+		return set;
 	if (state->ch != EPSILON)
 		return set;
 	if (state->out1)

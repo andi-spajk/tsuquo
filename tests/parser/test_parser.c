@@ -70,6 +70,7 @@ void test_parse(void)
 	const char test_45[] = "[ab-e]lincoln";
 	const char test_46[] = "[2-901]";
 	const char test_47[] = "[X-\\[]";
+	const char test_48[] = "(0|(1(01*(00)*0)*1)*)*";
 
 	// for test_24
 	U64 check64_127 = 0;
@@ -151,6 +152,7 @@ void test_parse(void)
 	TEST_PARSE_HELPER(cc, test_45, nfa, "dots/test_45.dot");
 	TEST_PARSE_HELPER(cc, test_46, nfa, "dots/test_46.dot");
 	TEST_PARSE_HELPER(cc, test_47, nfa, "dots/test_47.dot");
+	TEST_PARSE_HELPER(cc, test_48, nfa, "dots/test_48.dot");
 
 	destroy_cmpctrl(cc);
 }

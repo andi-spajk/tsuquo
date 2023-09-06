@@ -453,6 +453,19 @@ void test_gen_graphviz(void)
 	gen_dfa_graphviz(dfa, "dots/zeroone2_DFA.dot", false);
 	gen_dfa_graphviz(dfa, "dots/zeroone2_DFA_ellipses.dot", true);
 
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+
+
+	read_line(cc, "(0|(1(01*(00)*0)*1)*)*", 22);
+	nfa = parse(cc);
+	TEST_ASSERT_NOT_NULL(nfa);
+	index_states(nfa);
+	dfa = subset(nfa);
+	gen_dfa_graphviz(dfa, "dots/modulo3_DFA.dot", false);
+	gen_dfa_graphviz(dfa, "dots/modulo3_DFA_ellipses.dot", true);
+
+
 	destroy_cmpctrl(cc);
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);
