@@ -449,22 +449,21 @@ int gen_nfa_graphviz(NFA *nfa, const char *file_name)
 	return 0;
 }
 
-/* compare_nfa_states()
-	@s1             ptr to NFAState struct
-	@s2             ptr to another NFAState struct
+/* compare_nfastates()
+	@n1             ptr to NFAState struct
+	@n2             ptr to another NFAState struct
 
 	@return         any value indicating the following:
-	                >0: s1 index goes after s2
-	                =0: s1 and s2 have equal indices (this should never
-	                      happen)
-	                <0: s1 index goes before s2
+	                >0: n1 index goes after n2
+	                =0: n1 and n2 have equal indices
+	                <0: n1 index goes before n2
 
 	Numerically compare two NFA states' indices. Use this to sort them in a
 	Set of NFAStates.
 */
-int compare_nfa_states(const void *s1, const void *s2)
+int compare_nfastates(const void *n1, const void *n2)
 {
-	return ((NFAState *)s1)->index - ((NFAState *)s2)->index;
+	return ((NFAState *)n1)->index - ((NFAState *)n2)->index;
 }
 
 /* epsilon_helper()
@@ -497,7 +496,7 @@ static Set *epsilon_helper(NFAState *state, Set *set)
 */
 Set *epsilon_closure(NFAState *state)
 {
-	Set *set = init_set(compare_nfa_states);
+	Set *set = init_set(compare_nfastates);
 	if (!set)
 		return NULL;
 	return epsilon_helper(state, set);

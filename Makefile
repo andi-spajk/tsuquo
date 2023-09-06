@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Werror -Wextra -std=c11
 REL_FLAGS = -O3
-DBG_FLAGS = -g -fsanitize=address,undefined
+DBG_FLAGS = -g3 -fsanitize=address,undefined
 
 REL = release
 OBJ = obj

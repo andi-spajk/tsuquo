@@ -38,7 +38,7 @@ DFAState *init_dfastate(int alphabet_size)
 	// constituent_nfastates is NOT allocated by the DFAState
 	// We can't figure out the constituent NFA states UNTIL we are doing
 	// the subset construction.
-	// So subset should assigns the set to the DFA state's pointer.
+	// So subset just assigns the set to DFAState->constituent_nfastates.
 	// If we initialize a set in here, we will leak memory when the subset
 	// assigns the actual set of constituent NFAStates.
 
@@ -56,9 +56,10 @@ void destroy_dfastate(DFAState *state)
 	if (!state)
 		return;
 	free(state->outs);
-	// DFAState is doubly-linked to a set of NFAStates
-	// the dfa->mem_region stores a set of these sets of NFAStates
-	// destroy_dfa will handle them and the DFAStates
+	// each DFAState is doubly-linked to a set of NFAStates
+	// a reference to each set of NFAStates is retained by dfa->mem_region
+	// destroy_dfa() will free them and the DFAState
+	// so don't destroy constituent_nfas here
 	free(state);
 }
 
@@ -185,7 +186,7 @@ void destroy_dfa(DFA *dfa)
 */
 Set *epsilon_closure_delta(Set *nfastates, U8 ch)
 {
-	Set *result = init_set(compare_nfa_states);
+	Set *result = init_set(compare_nfastates);
 	Set *epsilon;
 	NFAState *nfastate;
 	for (Iterator *it = set_begin(nfastates); it; advance_iter(&it)) {

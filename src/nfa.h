@@ -49,7 +49,7 @@ NFA *init_range_nfa(U8 left, U8 right);
 
 int index_states(NFA *nfa);
 int gen_nfa_graphviz(NFA *nfa, const char *file_name);
-int compare_nfa_states(const void *s1, const void *s2);
+int compare_nfastates(const void *n1, const void *n2);
 Set *epsilon_closure(NFAState *state);
 
 #endif
