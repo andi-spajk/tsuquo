@@ -122,7 +122,7 @@ DFA *init_dfa(NFA *nfa)
 	dfa->alphabet = malloc(dfa->alphabet_size);
 	dfa->accepts = init_set(compare_dfastates);
 	dfa->mem_region = init_set(compare_sets);
-	if (!(dfa->accepts || dfa->mem_region || dfa->alphabet)) {
+	if (!(dfa->alphabet || dfa->accepts || dfa->mem_region)) {
 		destroy_set(dfa->accepts);
 		destroy_set(dfa->mem_region);
 		free(dfa->alphabet);
@@ -146,6 +146,9 @@ DFA *init_dfa(NFA *nfa)
 			bitfield = nfa->alphabet64_127;
 	}
 	return dfa;
+
+	// transition table and state table can only be allocated after the
+	// subset construction
 }
 
 /* destroy_dfa()
@@ -171,6 +174,12 @@ void destroy_dfa(DFA *dfa)
 	}
 	destroy_set(dfa->mem_region);
 
+	if (dfa->delta) {
+		for (int i = 0; i < dfa->size; i++)
+			free(dfa->delta[i]);
+	}
+	free(dfa->delta);
+	free(dfa->states);
 	free(dfa);
 }
 
@@ -205,7 +214,7 @@ Set *epsilon_closure_delta(Set *nfastates, U8 ch)
 
 	@return         the NFA's equivalent DFA
 
-	Convert an NFA to a DFA.
+	Convert an NFA to a DFA via the subset construction.
 */
 DFA *subset(NFA *nfa)
 {
@@ -271,7 +280,7 @@ We used q to build every t in this for loop, but q and t do not have the same
 corresponding DFAState.
 We used the same q for each t, BUT A DIFFERENT ch FOR EACH t.
 So q may be transitioning to itself but it also may not.
-Oh my god this mistake is so obvious in hindsight. Wtf was I thinking???
+Oh my god this mistake is so obvious in hindsight wtf was I thinking???
 */
 				qstate->outs[i] = (DFAState *)(found->id);
 				if (set_find(found, nfa->accept)) {
@@ -284,6 +293,63 @@ Oh my god this mistake is so obvious in hindsight. Wtf was I thinking???
 	}
 	// empty worklist can be safely destroyed without leaking anything
 	destroy_set(worklist);
+	dfa->size = dfa->mem_region->size;
+	return dfa;
+}
+
+/* convert_nfa_to_dfa()
+	@nfa            ptr to NFA struct
+
+	@return         ptr to a new DFA that's equivalent to the NFA, NULL if
+	                fail
+
+	Convert an NFA to a DFA.
+
+	Populate the internal tables in the DFA struct.
+*/
+DFA *convert_nfa_to_dfa(NFA *nfa)
+{
+	DFA *dfa = subset(nfa);
+	if (!dfa)
+		return NULL;
+
+	// dynamically allocate 2D transition table
+	int **T = malloc(dfa->size * sizeof(int *));
+	if (!T) {
+		destroy_dfa(dfa);
+		return NULL;
+	}
+	for (int i = 0; i < dfa->size; i++) {
+		T[i] = malloc(dfa->alphabet_size * sizeof(int));
+		if (!T[i]) {
+			destroy_dfa(dfa);
+			return NULL;
+		}
+	}
+	dfa->delta = T;
+
+	dfa->states = calloc(dfa->size, sizeof(DFAState *));
+	if (!dfa->states) {
+		destroy_dfa(dfa);
+		return NULL;
+	}
+
+	DFAState *out_state, *curr_state;
+	int curr_index;
+	for (Iterator *it = set_begin(dfa->mem_region); it; advance_iter(&it)) {
+		curr_state = (DFAState *)(((Set *)(it->element))->id);
+		curr_index = curr_state->index;
+		for (int i = 0; i < dfa->alphabet_size; i++) {
+			// when we loop over the alphabet, the alphabet char is
+			// automatically mapped to an outs[] index (ie i)
+			out_state = curr_state->outs[i];
+			if (out_state)
+				dfa->delta[curr_index][i] = out_state->index;
+			else
+				dfa->delta[curr_index][i] = -1;
+		}
+		dfa->states[curr_index] = curr_state;
+	}
 	return dfa;
 }
 

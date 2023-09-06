@@ -409,7 +409,8 @@ static void graphviz_helper(NFAState *state, FILE *f)
 		fprintf(f, " ->");
 		fprintf(f, " n%d", state->out2->index);
 		// out2 is always an epsilon transition because any non-epsilon
-		// transition goes to out1 by default
+		// transition goes to out1 by default, and Thompson NFA states
+		// can't have transitions on two different symbols
 		fprintf(f, " [label=\"&epsilon;\"]\n");
 		if (!state->out2->seen)
 			graphviz_helper(state->out2, f);

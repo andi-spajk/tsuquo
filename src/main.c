@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 	}
 	index_states(nfa);
 
-	DFA *dfa = subset(nfa);
+	DFA *dfa = convert_nfa_to_dfa(nfa);
 	if (!dfa) {
 		destroy_cmpctrl(cc);
 		destroy_nfa_and_states(nfa);

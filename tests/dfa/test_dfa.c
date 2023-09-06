@@ -23,6 +23,9 @@ void test_inits(void)
 	TEST_ASSERT_EQUAL_UINT8('$', dfa->alphabet[0]);
 	TEST_ASSERT_EQUAL_INT(0, dfa->mappings['$']);
 
+	TEST_ASSERT_NULL(dfa->delta);
+	TEST_ASSERT_NULL(dfa->states);
+
 	DFAState *state = init_dfastate(dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(-1, state->index);
 	TEST_ASSERT_FALSE(state->is_accept);
@@ -44,6 +47,9 @@ void test_inits(void)
 
 	TEST_ASSERT_EQUAL_UINT8('x', dfa->alphabet[1]);
 	TEST_ASSERT_EQUAL_INT(1, dfa->mappings['x']);
+
+	TEST_ASSERT_NULL(dfa->delta);
+	TEST_ASSERT_NULL(dfa->states);
 
 	state = init_dfastate(dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(-1, state->index);
@@ -70,7 +76,6 @@ void test_epsilon_closure_delta(void)
 	NFA *b_c = nfa_union(b, c);
 	b_c = transform(b_c, '*');
 	regex = nfa_append(regex, b_c);
-
 
 	// ********!!!DO NOT FORGET THIS!!!********
 	index_states(regex);
@@ -166,7 +171,7 @@ void test_subset(void)
 	TEST_ASSERT_NOT_NULL(dfa);
 	TEST_ASSERT_EQUAL_INT(3, dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
-	TEST_ASSERT_EQUAL_INT(4, dfa->mem_region->size);
+	TEST_ASSERT_EQUAL_INT(4, dfa->size);
 	int a = 0;
 	int b = 1;
 	int c = 2;
@@ -221,7 +226,7 @@ void test_subset(void)
 	TEST_ASSERT_NOT_NULL(dfa);
 	TEST_ASSERT_EQUAL_INT(7, dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
-	TEST_ASSERT_EQUAL_INT(9, dfa->mem_region->size);
+	TEST_ASSERT_EQUAL_INT(9, dfa->size);
 
 	//             0 1 2 3 4 5 6
 	// alphabet = {a,e,h,o,r,t,w}
@@ -292,7 +297,7 @@ void test_subset(void)
 	TEST_ASSERT_NOT_NULL(dfa);
 	TEST_ASSERT_EQUAL_INT(3, dfa->alphabet_size);
 	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
-	TEST_ASSERT_EQUAL_INT(4, dfa->mem_region->size);
+	TEST_ASSERT_EQUAL_INT(4, dfa->size);
 
 	d0 = dfa->start;
 	TEST_ASSERT_NOT_NULL(d0->outs[a]);
@@ -331,9 +336,51 @@ void test_subset(void)
 	dfa = subset(nfa);
 	TEST_ASSERT_NOT_NULL(dfa);
 	TEST_ASSERT_EQUAL_INT(3, dfa->accepts->size);
-	TEST_ASSERT_EQUAL_INT(8, dfa->mem_region->size);
+	TEST_ASSERT_EQUAL_INT(8, dfa->size);
 
 	// too lazy
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_cmpctrl(cc);
+}
+
+void test_convert_nfa_to_dfa(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+	read_line(cc, "abc|[xb]*", 9);
+	NFA *nfa = parse(cc);
+	index_states(nfa);
+	DFA *dfa = convert_nfa_to_dfa(nfa);
+
+	TEST_ASSERT_NOT_NULL(dfa->delta);
+	TEST_ASSERT_NOT_NULL(dfa->states);
+
+	for (int i = 0; i < dfa->size; i++)
+		TEST_ASSERT_EQUAL_INT(i, dfa->states[i]->index);
+
+/* transition table
+  |a b c x
+0 |1 2   3
+1 |  4
+2 |  2   3
+3 |  2   3
+4 |    5
+5 |
+*/
+	int expected0[] = { 1,  2, -1,  3};
+	int expected1[] = {-1,  4, -1, -1};
+	int expected2[] = {-1,  2, -1,  3};
+	int expected3[] = {-1,  2, -1,  3};
+	int expected4[] = {-1, -1,  5, -1};
+	int expected5[] = {-1, -1, -1, -1};
+
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected0, dfa->delta[0], 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected1, dfa->delta[1], 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected2, dfa->delta[2], 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected3, dfa->delta[3], 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected4, dfa->delta[4], 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected5, dfa->delta[5], 4);
 
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);
@@ -417,6 +464,7 @@ int main(void)
 	RUN_TEST(test_inits);
 	RUN_TEST(test_epsilon_closure_delta);
 	RUN_TEST(test_subset);
+	RUN_TEST(test_convert_nfa_to_dfa);
 	RUN_TEST(test_gen_graphviz);
 
 	return UNITY_END();

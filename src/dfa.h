@@ -42,9 +42,20 @@ typedef struct DFA {
 	Since each set is doubly-linked with the DFAStates, the entire
 	collection can function as a (sort of) region-based memory manager.
 	*/
+	int size;  // determined after subset construction
 
-	U8 mappings[NUM_ASCII_CHARS];  // maps alphabet char to an index into
-	                               // the DFAState->outs array
+	int mappings[NUM_ASCII_CHARS];  // maps alphabet char to an index into
+	                                // the DFAState->outs array
+
+	// the following are intended for minimization, but may have future uses
+	int **delta;
+	/*
+	Transition table, but only holds the state indices
+	Access a state's outward transitions via delta[state index]
+	Access a destination state via delta[state index][transition char]
+		-1 indicates no transition
+	*/
+	DFAState **states;  // makes it easy to access states by their index
 } DFA;
 
 DFAState *init_dfastate(int alphabet_size);
@@ -54,6 +65,7 @@ void destroy_dfa(DFA *dfa);
 
 Set *epsilon_closure_delta(Set *nfastates, U8 ch);
 DFA *subset(NFA *nfa);
+DFA *convert_nfa_to_dfa(NFA *nfa);
 
 int gen_dfa_graphviz(DFA *dfa, const char *file_name, bool include_nfastates);
 
