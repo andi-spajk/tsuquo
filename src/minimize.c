@@ -170,9 +170,9 @@ bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa)
 
 	// dead/error state doesn't have a spot in the merge[][] table
 	if (i != DEAD_STATE && j != DEAD_STATE) {
-		// is the pair already marked?
+		// is the pair already marked as distinguishable?
 		if (!min_dfa->merge[i][j])
-			return false;
+			return true;
 	}
 
 	DFAState *accepti;
@@ -185,12 +185,12 @@ bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa)
 		acceptj = NULL;
 	else
 		acceptj = set_find(dfa->accepts, dfa->states[j]);
-	int outi, outj;
 	if (!accepti ^ !acceptj) {
 		return true;
 	} else {
 		// recursively generate every suffix that could come out of
 		// states i,j
+		int outi, outj;
 		for (int c = 0; c < dfa->alphabet_size; c++) {
 			outi = i;
 			outj = j;

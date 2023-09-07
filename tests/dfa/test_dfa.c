@@ -385,7 +385,32 @@ void test_convert_nfa_to_dfa(void)
 
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);
+
+	read_line(cc, "a*", 2);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	TEST_ASSERT_NOT_NULL(dfa->delta);
+	TEST_ASSERT_NOT_NULL(dfa->states);
+
+	for (int i = 0; i < dfa->size; i++)
+		TEST_ASSERT_EQUAL_INT(i, dfa->states[i]->index);
+
+/* transition table
+  a
+0 1
+1 1
+*/
+
+	int same_exp[] = {1};
+
+	TEST_ASSERT_EQUAL_INT_ARRAY(same_exp, dfa->delta[0], 1);
+	TEST_ASSERT_EQUAL_INT_ARRAY(same_exp, dfa->delta[1], 1);
+
 	destroy_cmpctrl(cc);
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
 }
 
 void test_gen_graphviz(void)
