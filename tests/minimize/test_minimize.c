@@ -500,6 +500,245 @@ void test_construct_minimal_states(void)
 	destroy_cmpctrl(cc);
 }
 
+void test_construct_transition_table(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+	NFA *nfa;
+	DFA *dfa;
+	MinimalDFA *min_dfa;
+	U64 exp;
+
+	read_line(cc, "(ab|ac)*", 8);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	quotient(min_dfa, dfa);
+	construct_minimal_states(min_dfa, dfa);
+	construct_transition_table(min_dfa, dfa);
+/*
+  0   | 1
+0     | a
+1 b,c |
+*/
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][1][ASCII0_63]);
+	exp = 1ULL << ('a'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[0][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][0][ASCII0_63]);
+	exp = 1ULL << ('b'-64);
+	exp |= 1ULL << ('c'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[1][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][1][ASCII64_127]);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "(0|(1(01*(00)*0)*1)*)*", 22);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	quotient(min_dfa, dfa);
+	construct_minimal_states(min_dfa, dfa);
+	construct_transition_table(min_dfa, dfa);
+/*
+  0 | 1 | 2
+0 0 | 1 |
+1 1 |   | 0
+2   | 0 | 1
+*/
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][2][ASCII64_127]);
+
+	exp = 1ULL << '1';
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[0][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[1][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[2][2][ASCII0_63]);
+	exp = 1ULL << '0';
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[0][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[1][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[2][1][ASCII0_63]);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "abc|[bx]*", 9);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	quotient(min_dfa, dfa);
+	construct_minimal_states(min_dfa, dfa);
+	construct_transition_table(min_dfa, dfa);
+
+/*
+  0 | 1 |  2  | 3 | 4
+0   | a | b,x |   |
+1   |   |     | b |
+2   |   | b,x |   |
+3   |   |     |   | c
+4
+*/
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][4][ASCII0_63]);
+
+	exp = 1ULL << ('a'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[0][1][ASCII64_127]);
+	exp = 1ULL << ('b'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[1][3][ASCII64_127]);
+	exp |= 1ULL << ('x'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[0][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[2][2][ASCII64_127]);
+	exp = 1ULL << ('c'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[3][4][ASCII64_127]);
+
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][3][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][4][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][4][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][4][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][4][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][3][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][4][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][4][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][3][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][3][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][4][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][4][ASCII64_127]);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "for|[f-h]*", 10);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	quotient(min_dfa, dfa);
+	construct_minimal_states(min_dfa, dfa);
+	construct_transition_table(min_dfa, dfa);
+/*
+  0 | 1 |   2   | 3 | 4
+0   | f |  g,h  |   |
+1   |   | f,g,h | o |
+2   |   | f,g,h |   |
+3   |   |       |   | r
+4
+*/
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][4][ASCII0_63]);
+
+	exp = 1ULL << ('f'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[0][1][ASCII64_127]);
+	exp = 1ULL << ('g'-64);
+	exp |= 1ULL << ('h'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[0][2][ASCII64_127]);
+	exp |= 1ULL << ('f'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[1][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[2][2][ASCII64_127]);
+	exp = 1ULL << ('o'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[1][3][ASCII64_127]);
+	exp = 1ULL << ('r'-64);
+	TEST_ASSERT_EQUAL_UINT64(exp, min_dfa->delta[3][4][ASCII64_127]);
+
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][3][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][4][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[0][4][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][4][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[1][4][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][3][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][4][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[2][4][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[3][3][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][0][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][0][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][1][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][1][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][2][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][2][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][3][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][3][ASCII64_127]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][4][ASCII0_63]);
+	TEST_ASSERT_EQUAL_UINT64(0, min_dfa->delta[4][4][ASCII64_127]);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+	destroy_cmpctrl(cc);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -508,6 +747,7 @@ int main(void)
 	RUN_TEST(test_distinguishable);
 	RUN_TEST(test_quotient);
 	RUN_TEST(test_construct_minimal_states);
+	RUN_TEST(test_construct_transition_table);
 
 	return UNITY_END();
 }

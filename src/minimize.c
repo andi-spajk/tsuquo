@@ -158,13 +158,19 @@ void destroy_minimal_dfa(MinimalDFA *min_dfa)
 	destroy_set(min_dfa->accepts);
 
 	if (min_dfa->merge) {
-		for (int i = 0; i < min_dfa->rows; i++) {
+		for (int i = 0; i < min_dfa->rows; i++)
 			free(min_dfa->merge[i]);
-		}
 	}
 	free(min_dfa->merge);
 
-	// free delta
+	if (min_dfa->delta) {
+		for (int i = 0; i < min_dfa->size; i++) {
+			for (int j = 0; j < min_dfa->size; j++)
+				free(min_dfa->delta[i][j]);
+			free(min_dfa->delta[i]);
+		}
+	}
+	free(min_dfa->delta);
 
 	free(min_dfa->numbers);
 
@@ -242,13 +248,6 @@ bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa)
 				outi = dfa->delta[i][c];
 			if (j != DEAD_STATE)
 				outj = dfa->delta[j][c];
-			// check for infinite loop
-			// TODO: this check might be unnecessary
-			// uncomment it at your own risk
-			// if (outi == i && outj == j)
-			// 	continue;
-			// else if (outi == j && outj == i)
-			// 	continue;
 			if (distinguishable(outi, outj, min_dfa, dfa))
 				return true;
 		}
@@ -395,5 +394,89 @@ MinimalDFA *construct_minimal_states(MinimalDFA *min_dfa, DFA *dfa)
 		set_insert(min_dfa->mem_region, min_set);
 	}
 	min_dfa->size = min_dfa->mem_region->size;
+	return min_dfa;
+}
+
+/* find_min_set()
+	@state_index    unminimal DFAState index to find
+
+	@return         ptr to Set of DFAState indices that contains the index,
+	                or NULL if not found
+
+	Search minimal DFA states (represented as sets) for a particular index
+	of a constituent unminial DFA state.
+*/
+static Set *find_min_set(MinimalDFA *min_dfa, int state_index)
+{
+	Iterator *it = set_begin(min_dfa->mem_region);
+	Set *curr;
+	for (; it; advance_iter(&it)) {
+		curr = (Set *)(it->element);
+		if (set_find(curr, &state_index))
+			return curr;
+	}
+	return NULL;
+}
+
+/* construct_transition_table()
+	@min_dfa        ptr to MinimalDFA struct
+	@dfa            ptr to DFA struct
+
+	@return         ptr to minimal DFA that has a newly allocated transition
+	                table, or NULL if fail
+
+	Allocate and construct the transition table for a minimized DFA.
+*/
+MinimalDFA *construct_transition_table(MinimalDFA *min_dfa, DFA *dfa)
+{
+	// represent a 2D array of bitfields of transition chars
+	// full bitfield requires two slots of U64, so concretely, array is 3D
+
+	// 1. allocate row for each minimal state
+	U64 ***T = calloc(min_dfa->size, sizeof(U64 **));
+	if (!T)
+		return NULL;
+	for (int i = 0; i < min_dfa->size; i++) {
+		// 2. allocate column for each outgoing minimal state
+		T[i] = calloc(min_dfa->size, sizeof(U64 *));
+		if (!T[i])
+			return NULL;
+		for (int j = 0; j < min_dfa->size; j++) {
+			// 3. allocate slots for each bitfield
+			T[i][j] = calloc(2, sizeof(U64));
+			if (!T[i][j])
+				return NULL;
+		}
+	}
+	min_dfa->delta = T;
+
+	Iterator *it = set_begin(min_dfa->mem_region);
+	Set *curr_set, *dest_set;
+	int curr_index, head_index, dest_index;
+	DFAState *out;
+	for (; it; advance_iter(&it)) {
+		// since each set is one equivalence class, all the constituent
+		// states have the same behavior
+		// so just consider the head of the set
+		curr_set = (Set *)(it->element);
+		head_index = *(int *)curr_set->head->element;
+		curr_index = ((MinimalDFAState *)(curr_set->id))->index;
+
+		// to where does the "set" transition?
+		U8 ch;
+		for (int i = 0; i < dfa->alphabet_size; i++) {
+			// i automatically maps to an outs index
+			out = dfa->states[head_index]->outs[i];
+			if (out) {
+				dest_set = find_min_set(min_dfa, out->index);
+				dest_index = ((MinimalDFAState *)(dest_set->id))->index;
+				ch = dfa->alphabet[i];
+				if (ch >= 64)
+					min_dfa->delta[curr_index][dest_index][ASCII64_127] |= (1ULL << (ch-64));
+				else
+					min_dfa->delta[curr_index][dest_index][ASCII0_63] |= (1ULL << ch);
+			}
+		}
+	}
 	return min_dfa;
 }

@@ -96,5 +96,6 @@ void destroy_minimal_dfa(MinimalDFA *min_dfa);
 bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa);
 int quotient(MinimalDFA *min_dfa, DFA *dfa);
 MinimalDFA *construct_minimal_states(MinimalDFA *min_dfa, DFA *dfa);
+MinimalDFA *construct_transition_table(MinimalDFA *min_dfa, DFA *dfa);
 
 #endif
