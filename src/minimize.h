@@ -27,13 +27,29 @@ typedef struct MinimalDFA {
 	Set *accepts;
 	int **merge;
 	/*
-	Table of indistinguishable states which indicates all equivalent states
-	after the quotient construction.
+	Table of indistinguishable unminimal DFA states, which gets partitioned
+	into all equivalent states after the quotient construction.
 	Must be int since we store 3 possible values:
 		 1: states are indistinguishable
 		 0: states are distinguishable
 		-1: row has been visited (needed for minimal state construction)
+	The quotient construction requires us to only consider
+		dimensions: (number of states - 1) x (number of states)
+		indices: [0,N-2] x [0,N-1]
+	NOTE: the second dimension could also decrease by 1, but I don't do that
+	because it makes all for loops more self-documenting:
+		for (int i = 0; i < min_dfa->rows; i++) {
+			for (int j = i+1; j < min_dfa->cols; j++) {
+				...
+			}
+		}
 	*/
+	bool collected_last_state;
+	// since merge[][] doesn't have a row index = (number of states - 1), we
+	// will keep this flag that indicates whether the last state (whose
+	// index equals (number of states - 1)) was already collapsed into an
+	// equivalence class
+	// see construct_minimal_states() for more
 
 	U64 ***delta;
 	/*
@@ -64,10 +80,13 @@ typedef struct MinimalDFA {
 	                  // each set is doubly-linked to a MinimalDFAState, so
 	                  // it functions as a (kinda) region-based memory
 	                  // manager
-	int size;
+	int size;  // determined after construct_minimal_states() is called
 } MinimalDFA;
 
 int compare_minimal_dfastates(const void *m1, const void *m2);
+int compare_minimal_sets(const void *s1, const void *s2);
+int compare_ints(const void *num1, const void *num2);
+
 MinimalDFAState *init_minimal_dfastate(void);
 void destroy_minimal_dfastate(MinimalDFAState *min_state);
 
@@ -76,5 +95,6 @@ void destroy_minimal_dfa(MinimalDFA *min_dfa);
 
 bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa);
 int quotient(MinimalDFA *min_dfa, DFA *dfa);
+MinimalDFA *construct_minimal_states(MinimalDFA *min_dfa, DFA *dfa);
 
 #endif

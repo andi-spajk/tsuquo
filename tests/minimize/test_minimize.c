@@ -41,6 +41,8 @@ void test_inits(void)
 	TEST_ASSERT_EQUAL_INT_ARRAY(expected3, &(min_dfa->merge[3][4]), 2);
 	TEST_ASSERT_EQUAL_INT_ARRAY(expected4, &(min_dfa->merge[4][5]), 1);
 
+	TEST_ASSERT_FALSE(min_dfa->collected_last_state);
+
 	for (int i = 0; i < dfa->size; i++)
 		TEST_ASSERT_EQUAL_INT(i, min_dfa->numbers[i]);
 
@@ -58,6 +60,8 @@ void test_inits(void)
 
 	int just_one_row[] = {1};
 	TEST_ASSERT_EQUAL_INT_ARRAY(just_one_row, &(min_dfa->merge[0][1]), 1);
+
+	TEST_ASSERT_FALSE(min_dfa->collected_last_state);
 
 	for (int i = 0; i < dfa->size; i++)
 		TEST_ASSERT_EQUAL_INT(i, min_dfa->numbers[i]);
@@ -233,7 +237,7 @@ void test_quotient(void)
   1 2 3 4 5
 0 F F F F F
 1   F F F F
-2       F F
+2     T F F
 3       F F
 4         F
 */
@@ -266,8 +270,8 @@ void test_quotient(void)
   1 2 3 4 5 6
 0 F F F F F F
 1   F F F F F
-2         F F
-3         F F
+2     T T F F
+3       T F F
 4         F F
 5           F
 */
@@ -291,6 +295,211 @@ void test_quotient(void)
 	destroy_cmpctrl(cc);
 }
 
+void test_construct_minimal_states(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+	NFA *nfa;
+	DFA *dfa;
+	MinimalDFA *min_dfa;
+	Iterator *it;
+	int i;
+	Set *curr;
+	MinimalDFAState *currq;
+	int n0 = 0;
+	int n1 = 1;
+	int n2 = 2;
+	int n3 = 3;
+	int n4 = 4;
+	int n5 = 5;
+	int n6 = 6;
+	int n7 = 7;
+
+	read_line(cc, "(ab|ac)*", 8);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	quotient(min_dfa, dfa);
+	TEST_ASSERT_NOT_NULL(construct_minimal_states(min_dfa, dfa));
+	TEST_ASSERT_EQUAL_INT(2, min_dfa->size);
+	TEST_ASSERT_EQUAL_INT(1, min_dfa->accepts->size);
+/*
+  1 2 3
+0 F T T
+1   F F
+2     T
+*/
+	Set *abac_equ_class0 = init_set(compare_ints);
+	set_insert(abac_equ_class0, &n0);
+	set_insert(abac_equ_class0, &n2);
+	set_insert(abac_equ_class0, &n3);
+	Set *abac_equ_class1 = init_set(compare_ints);
+	set_insert(abac_equ_class1, &n1);
+	Set *abac_equ_classes[] = {abac_equ_class0, abac_equ_class1};
+
+	i = 0;
+	it = set_begin(min_dfa->mem_region);
+	for (; it; advance_iter(&it), i++) {
+		curr = (Set *)(it->element);
+		currq = (MinimalDFAState *)(curr->id);
+		TEST_ASSERT_TRUE(set_equals(abac_equ_classes[i], curr));
+		// due to the nature of the minimal state construction algorithm
+		// all equivalence classes are discovered in sorted order, and
+		// the corresponding minimal state is created simultaneously
+		// so state index can be checked using i
+		TEST_ASSERT_EQUAL_INT(i, currq->index);
+		destroy_set(abac_equ_classes[i]);
+	}
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "(0|(1(01*(00)*0)*1)*)*", 22);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	quotient(min_dfa, dfa);
+	TEST_ASSERT_NOT_NULL(construct_minimal_states(min_dfa, dfa));
+	TEST_ASSERT_EQUAL_INT(3, min_dfa->size);
+	TEST_ASSERT_EQUAL_INT(1, min_dfa->accepts->size);
+/*
+  1 2 3 4 5 6 7
+0 T F F T F F F
+1   F F T F F F
+2     F F T F F
+3       F F T T
+4         F F F
+5           F F
+6             T
+*/
+	Set *modulo3_equ_class0 = init_set(compare_ints);
+	set_insert(modulo3_equ_class0, &n0);
+	set_insert(modulo3_equ_class0, &n1);
+	set_insert(modulo3_equ_class0, &n4);
+	Set *modulo3_equ_class2 = init_set(compare_ints);
+	set_insert(modulo3_equ_class2, &n2);
+	set_insert(modulo3_equ_class2, &n5);
+	Set *modulo3_equ_class3 = init_set(compare_ints);
+	set_insert(modulo3_equ_class3, &n3);
+	set_insert(modulo3_equ_class3, &n6);
+	set_insert(modulo3_equ_class3, &n7);
+	Set *modulo3_equ_classes[] = {modulo3_equ_class0, modulo3_equ_class2,
+	                              modulo3_equ_class3};
+
+	i = 0;
+	it = set_begin(min_dfa->mem_region);
+	for (; it; advance_iter(&it), i++) {
+		curr = (Set *)(it->element);
+		currq = (MinimalDFAState *)(curr->id);
+		TEST_ASSERT_TRUE(set_equals(modulo3_equ_classes[i], curr));
+		TEST_ASSERT_EQUAL_INT(i, currq->index);
+		destroy_set(modulo3_equ_classes[i]);
+	}
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "abc|[bx]*", 9);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	quotient(min_dfa, dfa);
+	TEST_ASSERT_NOT_NULL(construct_minimal_states(min_dfa, dfa));
+	TEST_ASSERT_EQUAL_INT(5, min_dfa->size);
+	TEST_ASSERT_EQUAL_INT(3, min_dfa->accepts->size);
+/*
+  1 2 3 4 5
+0 F F F F F
+1   F F F F
+2     T F F
+3       F F
+4         F
+5
+*/
+	Set *abcx_equ_class0 = init_set(compare_ints);
+	set_insert(abcx_equ_class0, &n0);
+	Set *abcx_equ_class1 = init_set(compare_ints);
+	set_insert(abcx_equ_class1, &n1);
+	Set *abcx_equ_class2 = init_set(compare_ints);
+	set_insert(abcx_equ_class2, &n2);
+	set_insert(abcx_equ_class2, &n3);
+	Set *abcx_equ_class4 = init_set(compare_ints);
+	set_insert(abcx_equ_class4, &n4);
+	Set *abcx_equ_class5 = init_set(compare_ints);
+	set_insert(abcx_equ_class5, &n5);
+	Set *abcx_equ_classes[] = {abcx_equ_class0, abcx_equ_class1,
+	                           abcx_equ_class2, abcx_equ_class4,
+	                           abcx_equ_class5};
+
+	i = 0;
+	it = set_begin(min_dfa->mem_region);
+	for (; it; advance_iter(&it), i++) {
+		curr = (Set *)(it->element);
+		currq = (MinimalDFAState *)(curr->id);
+		TEST_ASSERT_TRUE(set_equals(abcx_equ_classes[i], curr));
+		TEST_ASSERT_EQUAL_INT(i, currq->index);
+		destroy_set(abcx_equ_classes[i]);
+	}
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "for|[f-h]*", 10);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	quotient(min_dfa, dfa);
+	TEST_ASSERT_NOT_NULL(construct_minimal_states(min_dfa, dfa));
+/*
+  1 2 3 4 5 6
+0 F F F F F F
+1   F F F F F
+2     T T F F
+3       T F F
+4         F F
+5           F
+*/
+	Set *forfgh_equ_class0 = init_set(compare_ints);
+	set_insert(forfgh_equ_class0, &n0);
+	Set *forfgh_equ_class1 = init_set(compare_ints);
+	set_insert(forfgh_equ_class1, &n1);
+	Set *forfgh_equ_class2 = init_set(compare_ints);
+	set_insert(forfgh_equ_class2, &n2);
+	set_insert(forfgh_equ_class2, &n3);
+	set_insert(forfgh_equ_class2, &n4);
+	Set *forfgh_equ_class5 = init_set(compare_ints);
+	set_insert(forfgh_equ_class5, &n5);
+	Set *forfgh_equ_class6 = init_set(compare_ints);
+	set_insert(forfgh_equ_class6, &n6);
+	Set *forfgh_equ_classes[] = {forfgh_equ_class0, forfgh_equ_class1,
+	                             forfgh_equ_class2, forfgh_equ_class5,
+	                             forfgh_equ_class6};
+
+	i = 0;
+	it = set_begin(min_dfa->mem_region);
+	for (; it; advance_iter(&it), i++) {
+		curr = (Set *)(it->element);
+		currq = (MinimalDFAState *)(curr->id);
+		TEST_ASSERT_TRUE(set_equals(forfgh_equ_classes[i], curr));
+		TEST_ASSERT_EQUAL_INT(i, currq->index);
+		destroy_set(forfgh_equ_classes[i]);
+	}
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+	destroy_cmpctrl(cc);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -298,6 +507,7 @@ int main(void)
 	RUN_TEST(test_inits);
 	RUN_TEST(test_distinguishable);
 	RUN_TEST(test_quotient);
+	RUN_TEST(test_construct_minimal_states);
 
 	return UNITY_END();
 }

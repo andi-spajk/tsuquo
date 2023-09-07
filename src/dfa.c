@@ -339,7 +339,7 @@ DFA *convert_nfa_to_dfa(NFA *nfa)
 	DFAState *out_state, *curr_state;
 	int curr_index;
 	for (Iterator *it = set_begin(dfa->mem_region); it; advance_iter(&it)) {
-		curr_state = (DFAState *)(((Set *)(it->element))->id);
+		curr_state = (DFAState *)( ((Set *)(it->element))->id );
 		curr_index = curr_state->index;
 		for (int i = 0; i < dfa->alphabet_size; i++) {
 			// when we loop over the alphabet, the alphabet char is
@@ -427,7 +427,7 @@ int gen_dfa_graphviz(DFA *dfa, const char *file_name, bool include_nfastates)
 	Iterator *q = set_begin(dfa->mem_region);
 	DFAState *currq;
 	for (; q; advance_iter(&q)) {
-		currq = (DFAState *)(((Set *)(q->element))->id);
+		currq = (DFAState *)( ((Set *)(q->element))->id );
 		if (!currq->is_accept) {
 			fprintf(f, "\td%d", currq->index);
 			if (include_nfastates)
@@ -441,7 +441,7 @@ int gen_dfa_graphviz(DFA *dfa, const char *file_name, bool include_nfastates)
 	// print transitions
 	q = set_begin(dfa->mem_region);
 	for (; q; advance_iter(&q)) {
-		currq = (DFAState *)(((Set *)(q->element))->id);
+		currq = (DFAState *)( ((Set *)(q->element))->id );
 		for (int c = 0; c < dfa->alphabet_size; c++) {
 			if (!currq->outs[c])
 				continue;
