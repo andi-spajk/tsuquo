@@ -26,3 +26,5 @@ tests/dfa/dots
 tests/dfa/svgs
 
 tests/minimize/test_minimize
+tests/minimize/dots
+tests/minimize/svgs

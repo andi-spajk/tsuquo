@@ -97,5 +97,8 @@ bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa);
 int quotient(MinimalDFA *min_dfa, DFA *dfa);
 MinimalDFA *construct_minimal_states(MinimalDFA *min_dfa, DFA *dfa);
 MinimalDFA *construct_transition_table(MinimalDFA *min_dfa, DFA *dfa);
+MinimalDFA *minimize(DFA *dfa);
+
+int gen_minimal_dfa_graphviz(MinimalDFA *min_dfa, const char *file_name);
 
 #endif

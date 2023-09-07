@@ -5,6 +5,7 @@
 #include "control.h"
 #include "dfa.h"
 #include "lexer.h"
+#include "minimize.h"
 #include "nfa.h"
 #include "parser.h"
 
@@ -40,7 +41,15 @@ int main(int argc, char **argv)
 		destroy_nfa_and_states(nfa);
 		ABORT("DFA construction failed\n");
 	}
-	gen_dfa_graphviz(dfa, "dfa.dot", false);
+
+	MinimalDFA *min_dfa = minimize(dfa);
+	if (!min_dfa) {
+		destroy_cmpctrl(cc);
+		destroy_nfa_and_states(nfa);
+		destroy_dfa(dfa);
+		ABORT("DFA minimization failed\n");
+	}
+	gen_minimal_dfa_graphviz(min_dfa, "min.dot");
 
 	destroy_cmpctrl(cc);
 	destroy_nfa_and_states(nfa);

@@ -739,6 +739,84 @@ void test_construct_transition_table(void)
 	destroy_cmpctrl(cc);
 }
 
+void test_minimize_and_gen_graphviz(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+	NFA *nfa;
+	DFA *dfa;
+	MinimalDFA *min_dfa;
+
+	read_line(cc, "(0|(1(01*(00)*0)*1)*)*", 22);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/modulo3.dot"));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "(ab|ac)*", 8);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/abac.dot"));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "for|[f-h]*", 10);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/forfgh.dot"));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "for|[fh]*", 9);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/forfh.dot"));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "[A-Za-z_][A-Za-z0-9_]*", 22);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/C_ident.dot"));
+
+	destroy_cmpctrl(cc);
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -748,6 +826,7 @@ int main(void)
 	RUN_TEST(test_quotient);
 	RUN_TEST(test_construct_minimal_states);
 	RUN_TEST(test_construct_transition_table);
+	RUN_TEST(test_minimize_and_gen_graphviz);
 
 	return UNITY_END();
 }

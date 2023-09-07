@@ -7,9 +7,12 @@ REL = release
 OBJ = obj
 SRC = src
 
-DBG_DEP = $(addprefix $(OBJ)/,debug.o control.o dfa.o lexer.o nfa.o parser.o set.o)
-REL_DEP = $(addprefix $(REL)/,main.o control.o dfa.o lexer.o nfa.o parser.o set.o)
-HEADERS = $(addprefix $(SRC)/,common.h control.h dfa.h lexer.h nfa.h parser.h set.h)
+DBG_DEP = $(addprefix $(OBJ)/,debug.o control.o dfa.o lexer.o minimize.o nfa.o \
+                              parser.o set.o)
+REL_DEP = $(addprefix $(REL)/,main.o control.o dfa.o lexer.o minimize.o nfa.o  \
+                              parser.o set.o)
+HEADERS = $(addprefix $(SRC)/,common.h control.h dfa.h lexer.h minimize.h nfa.h\
+                              parser.h set.h)
 
 .PHONY: all clean deepclean
 

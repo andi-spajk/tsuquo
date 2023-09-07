@@ -5,6 +5,7 @@ Minimize a deterministic finite automata.
 */
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "common.h"
@@ -479,4 +480,172 @@ MinimalDFA *construct_transition_table(MinimalDFA *min_dfa, DFA *dfa)
 		}
 	}
 	return min_dfa;
+}
+
+/* minimize()
+	@dfa            ptr to DFA struct
+
+	@return         ptr to dynamically allocated MinimalDFA struct, or NULL
+	                if fail
+
+	Minimize a DFA and produce a MinimalDFA.
+*/
+MinimalDFA *minimize(DFA *dfa)
+{
+	MinimalDFA *min_dfa = init_minimal_dfa(dfa);
+	if (!min_dfa)
+		return NULL;
+	if (quotient(min_dfa, dfa) != 0)
+		return NULL;
+	if (!construct_minimal_states(min_dfa, dfa))
+		return NULL;
+	if (!construct_transition_table(min_dfa, dfa))
+		return NULL;
+	return min_dfa;
+}
+
+/* generate_next_range()
+	@f              output file
+	@bitfield       bitfield of ASCII transition chars
+	@i              bit index of the LSB of @bitfield
+	@print_delim    print delimiter
+
+	@return         number of bits consumed
+
+	Derive a regex range from a bitfield of transition chars.
+*/
+static U8 generate_next_range(FILE *f, U64 bitfield, U8 i, bool print_delim)
+{
+	if (!bitfield)
+		return 63;
+
+	U8 original_i = i;
+	U8 left, right;
+	while (!(bitfield & 1)) {
+		bitfield >>= 1;
+		i++;
+	}
+
+	// found the next leftmost 1-bit
+	left = i;
+	right = i;
+
+	// check if there are contiguous 1s, ie a range
+	// if so, find the rightmost 1-bit of the range
+	bitfield >>= 1;
+	i++;
+	while (bitfield & 1) {
+		right = i;
+		bitfield >>= 1;
+		i++;
+	}
+
+	if (print_delim)
+		fprintf(f, "\\n");
+
+	if (left == right) {
+		// one char
+		switch (left) {
+		case '\n':
+			fprintf(f, "\\\\n");
+			break;
+		case '\t':
+			fprintf(f, "\\\\t");
+			break;
+		default:
+			fprintf(f, "%c", left);
+			break;
+		}
+	} else if (right - left == 1) {
+		fprintf(f, "[%c%c]", left, right);
+	} else {
+		fprintf(f, "[%c-%c]", left, right);
+	}
+	return i - original_i;
+}
+
+/* generate_transition_label()
+	@f              output file
+	@lower          bitfield of transition chars (ASCII [0,63])
+	@upper          bitfield of transition chars (ASCII [64,127])
+
+	Print a transition label to a Graphviz dot file.
+*/
+static void generate_transition_label(FILE *f, U64 lower, U64 upper)
+{
+	bool print_delim = false;
+	U8 shift;
+	U8 i = 0;
+	do {
+		shift = generate_next_range(f, lower, i, print_delim);
+		lower >>= shift;
+		i += shift;
+		print_delim = true;
+	} while (lower);
+	i = 64;
+	do {
+		shift = generate_next_range(f, upper, i, print_delim);
+		upper >>= shift;
+		i += shift;
+		print_delim = true;
+	} while (upper);
+}
+
+/* gen_minimal_dfa_graphviz()
+	@min_dfa        ptr to MinimalDFA struct
+	@file_name      string containing the output file name
+
+	@return         0 if success, -1 if fail
+
+	Generate a Graphviz DOT representation of a minimal DFA.
+*/
+int gen_minimal_dfa_graphviz(MinimalDFA *min_dfa, const char *file_name)
+{
+	FILE *f = fopen(file_name, "w");
+	if (!f)
+		return -1;
+
+	fprintf(f, "digraph MinimalDFA {\n");
+	fprintf(f, "\tfontname = \"Helvetica,Arial,sans-serif\"\n");
+	fprintf(f, "\tnode [fontname=\"Helvetica,Arial,sans-serif\"]\n");
+	fprintf(f, "\tedge [fontname=\"Helvetica,Arial,sans-serif\"]\n");
+	fprintf(f, "\trankdir = LR\n");
+	fprintf(f, "\n");
+
+	fprintf(f, "\tnode [shape=doublecircle]\n");
+	Iterator *it = set_begin(min_dfa->accepts);
+	MinimalDFAState *currq;
+	for (; it; advance_iter(&it)) {
+		currq = (MinimalDFAState*)((Set *)(it->element));
+		fprintf(f, "\tq%d\n", currq->index);
+	}
+	fprintf(f, "\n");
+
+	fprintf(f, "\tnode [shape=circle]\n");
+	it = set_begin(min_dfa->mem_region);
+	for (; it; advance_iter(&it)) {
+		currq = (MinimalDFAState*)(((Set *)(it->element))->id);
+		if (!currq->is_accept)
+			fprintf(f, "\tq%d\n", currq->index);
+	}
+	fprintf(f, "\n");
+
+	U64 lower, upper;
+	for (int i = 0; i < min_dfa->size; i++) {
+		for (int j = 0; j < min_dfa->size; j++) {
+			lower = min_dfa->delta[i][j][ASCII0_63];
+			upper = min_dfa->delta[i][j][ASCII64_127];
+			if (lower != 0 || upper != 0) {
+				fprintf(f, "\tq%d", i);
+				fprintf(f, " ->");
+				fprintf(f, " q%d", j);
+				fprintf(f, " [label=\"");
+				generate_transition_label(f, lower, upper);
+				fprintf(f, "\"]\n");
+			}
+		}
+	}
+	fprintf(f, "}\n");
+	fclose(f);
+	return 0;
 }

@@ -20,8 +20,8 @@ $(OBJ):
 	mkdir -p $@
 
 test_minimize: $(DEP) $(UNITY_DEP) $(HEADERS)
-	#mkdir -p dots
-	#mkdir -p svgs
+	mkdir -p dots
+	mkdir -p svgs
 	$(CC) $(CFLAGS) $(DEP) $(UNITY_DEP) -o $@
 
 $(OBJ)/test_minimize.o: test_minimize.c | $(OBJ)
@@ -38,5 +38,5 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 
 clean:
 	rm $(DEP) $(UNITY_DEP) test_minimize -rf
-	#rm dots/* -rf
-	#rm svgs/* -rf
+	rm dots/* -rf
+	rm svgs/* -rf
