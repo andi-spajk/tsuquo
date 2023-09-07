@@ -152,12 +152,152 @@ Table of Indistinguishable States
 	destroy_minimal_dfa(min_dfa);
 }
 
+void test_quotient(void)
+{
+	CmpCtrl *cc = init_cmpctrl();
+	read_line(cc, "(ab|ac)*", 8);
+	NFA *nfa = parse(cc);
+	index_states(nfa);
+	DFA *dfa = convert_nfa_to_dfa(nfa);
+	MinimalDFA *min_dfa = init_minimal_dfa(dfa);
+
+	TEST_ASSERT_EQUAL_INT(0, quotient(min_dfa, dfa));
+
+/*
+  1 2 3
+0 F T T
+1   F F
+2     T
+*/
+	int expected0[] = {0, 1, 1};
+	int expected1[] =    {0, 0};
+	int expected2[] =       {1};
+
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected0, &(min_dfa->merge[0][1]), 3);
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected1, &(min_dfa->merge[1][2]), 2);
+	TEST_ASSERT_EQUAL_INT_ARRAY(expected2, &(min_dfa->merge[2][3]), 1);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "(0|(1(01*(00)*0)*1)*)*", 22);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+
+	TEST_ASSERT_EQUAL_INT(0, quotient(min_dfa, dfa));
+
+/*
+  1 2 3 4 5 6 7
+0 T F F T F F F
+1   F F T F F F
+2     F F T F F
+3       F F T T
+4         F F F
+5           F F
+6             T
+*/
+	int exp0[] = {1,0,0,1,0,0,0};
+	int exp1[] =   {0,0,1,0,0,0};
+	int exp2[] =     {0,0,1,0,0};
+	int exp3[] =       {0,0,1,1};
+	int exp4[] =         {0,0,0};
+	int exp5[] =           {0,0};
+	int exp6[] =             {1};
+
+	TEST_ASSERT_EQUAL_INT_ARRAY(exp0, &(min_dfa->merge[0][1]), 7);
+	TEST_ASSERT_EQUAL_INT_ARRAY(exp1, &(min_dfa->merge[1][2]), 6);
+	TEST_ASSERT_EQUAL_INT_ARRAY(exp2, &(min_dfa->merge[2][3]), 5);
+	TEST_ASSERT_EQUAL_INT_ARRAY(exp3, &(min_dfa->merge[3][4]), 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(exp4, &(min_dfa->merge[4][5]), 3);
+	TEST_ASSERT_EQUAL_INT_ARRAY(exp5, &(min_dfa->merge[5][6]), 2);
+	TEST_ASSERT_EQUAL_INT_ARRAY(exp6, &(min_dfa->merge[6][7]), 1);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "abc|[bx]*", 9);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+
+	TEST_ASSERT_EQUAL_INT(0, quotient(min_dfa, dfa));
+
+/*
+  1 2 3 4 5
+0 F F F F F
+1   F F F F
+2       F F
+3       F F
+4         F
+*/
+	int abx_exp0[] = {0,0,0,0,0};
+	int abx_exp1[] =   {0,0,0,0};
+	int abx_exp2[] =     {1,0,0};
+	int abx_exp3[] =       {0,0};
+	int abx_exp4[] =         {0};
+
+	TEST_ASSERT_EQUAL_INT_ARRAY(abx_exp0, &(min_dfa->merge[0][1]), 5);
+	TEST_ASSERT_EQUAL_INT_ARRAY(abx_exp1, &(min_dfa->merge[1][2]), 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(abx_exp2, &(min_dfa->merge[2][3]), 3);
+	TEST_ASSERT_EQUAL_INT_ARRAY(abx_exp3, &(min_dfa->merge[3][4]), 2);
+	TEST_ASSERT_EQUAL_INT_ARRAY(abx_exp4, &(min_dfa->merge[4][5]), 1);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "for|[f-h]*", 10);
+	nfa = parse(cc);
+	index_states(nfa);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+
+	TEST_ASSERT_EQUAL_INT(0, quotient(min_dfa, dfa));
+
+/*
+  1 2 3 4 5 6
+0 F F F F F F
+1   F F F F F
+2         F F
+3         F F
+4         F F
+5           F
+*/
+	int forfgh_exp0[] = {0,0,0,0,0,0};
+	int forfgh_exp1[] =   {0,0,0,0,0};
+	int forfgh_exp2[] =     {1,1,0,0};
+	int forfgh_exp3[] =       {1,0,0};
+	int forfgh_exp4[] =         {0,0};
+	int forfgh_exp5[] =           {0};
+
+	TEST_ASSERT_EQUAL_INT_ARRAY(forfgh_exp0, &(min_dfa->merge[0][1]), 6);
+	TEST_ASSERT_EQUAL_INT_ARRAY(forfgh_exp1, &(min_dfa->merge[1][2]), 5);
+	TEST_ASSERT_EQUAL_INT_ARRAY(forfgh_exp2, &(min_dfa->merge[2][3]), 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(forfgh_exp3, &(min_dfa->merge[3][4]), 3);
+	TEST_ASSERT_EQUAL_INT_ARRAY(forfgh_exp4, &(min_dfa->merge[4][5]), 2);
+	TEST_ASSERT_EQUAL_INT_ARRAY(forfgh_exp5, &(min_dfa->merge[4][5]), 1);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+	destroy_cmpctrl(cc);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
 
 	RUN_TEST(test_inits);
 	RUN_TEST(test_distinguishable);
+	RUN_TEST(test_quotient);
 
 	return UNITY_END();
 }

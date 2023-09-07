@@ -170,6 +170,9 @@ bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa)
 
 	// dead/error state doesn't have a spot in the merge[][] table
 	if (i != DEAD_STATE && j != DEAD_STATE) {
+		// TODO: checking j might be unncessary
+		if (i == min_dfa->rows || j == min_dfa->cols)
+			return false;
 		// is the pair already marked as distinguishable?
 		if (!min_dfa->merge[i][j])
 			return true;
@@ -199,9 +202,46 @@ bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa)
 				outi = dfa->delta[i][c];
 			if (j != DEAD_STATE)
 				outj = dfa->delta[j][c];
+			// check for infinite loop
+			// TODO: this check might be unnecessary
+			// uncomment it at your own risk
+			// if (outi == i && outj == j)
+			// 	continue;
+			// else if (outi == j && outj == i)
+			// 	continue;
 			if (distinguishable(outi, outj, min_dfa, dfa))
 				return true;
 		}
 		return false;
 	}
+}
+
+/* quotient()
+	@min_dfa        ptr to MinimalDFA struct
+	@dfa            ptr to DFA struct
+
+	@return         0 if success (there should be no other return codes)
+
+	Perform the quotient construction on a DFA in order to find equivalent
+	states.
+*/
+int quotient(MinimalDFA *min_dfa, DFA *dfa)
+{
+	bool made_mark = true;
+	while (made_mark) {
+		made_mark = false;
+		for (int i = 0; i < min_dfa->rows; i++) {
+			for (int j = i+1; j < min_dfa->cols; j++) {
+				// pair is already marked as distinguishable
+				// distinguishable = don't merge
+				if (!min_dfa->merge[i][j])
+					continue;
+				if (distinguishable(i, j, min_dfa, dfa)) {
+					min_dfa->merge[i][j] = false;
+					made_mark = true;
+				}
+			}
+		}
+	}
+	return 0;
 }
