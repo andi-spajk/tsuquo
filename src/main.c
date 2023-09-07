@@ -50,10 +50,14 @@ int main(int argc, char **argv)
 		ABORT("DFA minimization failed\n");
 	}
 	gen_minimal_dfa_graphviz(min_dfa, "min.dot");
+	if (system("dot -Tsvg min.dot -o min.svg") != 0)
+		printf("failure\n");
+	else
+		printf("success\n");
 
 	destroy_cmpctrl(cc);
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);
-	printf("success\n");
+	destroy_minimal_dfa(min_dfa);
 	return 0;
 }

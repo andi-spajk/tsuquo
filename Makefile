@@ -50,4 +50,4 @@ clean:
 	rm $(REL_DEP) main -rf
 
 deepclean:
-	rm $(REL_DEP) $(DBG_DEP) main -rf
+	rm $(REL_DEP) $(DBG_DEP) main debug -rf

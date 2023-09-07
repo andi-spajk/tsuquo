@@ -38,10 +38,15 @@ U8 lex(CmpCtrl *cc)
 	U8 ch = get_char(cc);
 
 	// ignore literal newlines
-	if (ch == '\r')
+	while (ch == '\r') {
 		ch = get_char(cc);
-	if (ch == '\n')
+		if (ch == '\n')
+			ch = get_char(cc);
+	}
+	while (ch == '\n') {
 		ch = get_char(cc);
+	}
+
 	if (ch == '\\') {
 		ch = get_char(cc);
 		switch (ch) {
