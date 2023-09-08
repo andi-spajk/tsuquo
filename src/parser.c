@@ -215,7 +215,7 @@ NFA *allowed(CmpCtrl *cc)
 			}
 			if (cc->token < left) {
 				cc->flags |= CC_DISABLE_INSTEAD_FOUND;
-				print_error(cc, "range's upper bound exceeds left bound");
+				print_error(cc, "range's upper bound is less than lower bound");
 				destroy_nfa_and_states(result);
 				return NULL;
 			}

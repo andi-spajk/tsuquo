@@ -54,18 +54,25 @@ int read_file(CmpCtrl *cc, const char *file_name)
 		return -1;
 
 	// determine file size in bytes
+	// we don't actually need exactly this many since we will remove all
+	// newlines, but it's a few bytes so who cares
 	fseek(f, 0, SEEK_END);
-	int fsize = ftell(f);
-	rewind(f);
 
 	free(cc->buffer);
-	cc->buffer = malloc(fsize);
+	cc->buffer = calloc(ftell(f), 1);
 	if (!cc->buffer)
 		return -1;
-	if (fread(cc->buffer, 1, fsize, f) != (size_t)fsize)
-		return -1;
 
-	cc->buffer_len = fsize;
+	rewind(f);
+
+	int c;
+	int i = 0;
+	while ((c = fgetc(f)) != EOF) {
+		if (c != '\r' && c != '\n')
+			cc->buffer[i++] = c;
+	}
+
+	cc->buffer_len = i;
 	// don't forget to reset position
 	cc->pos = 0;
 
