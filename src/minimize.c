@@ -608,6 +608,9 @@ static void generate_transition_label(FILE *f, U64 lower, U64 upper)
 		i += shift;
 		print_delim = true;
 	} while (lower);
+	// TODO: if there is no lower range, an extraneous newline is printed
+	// TODO: if a range crosses the border between lower and upper, it gets
+	// printed as 2 separate ranges, eg [ -?][@-~]
 	i = 64;
 	do {
 		shift = generate_next_range(f, upper, i, print_delim);

@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Werror -Wextra -g3 -std=c11 -fsanitize=address,undefined
 
-OBJ = ../../obj
+OBJ = ../../obj/linux
 SRC = ../../src
 CFLAGS += -I$(SRC)
 
@@ -15,22 +15,20 @@ HEADERS = $(addprefix $(SRC)/,common.h lexer.h control.h)
 all: test_lexer
 
 $(OBJ):
+	mkdir -p ../../obj
 	mkdir -p $@
 
 test_lexer: $(DEP) $(UNITY_DEP) $(HEADERS)
 	$(CC) $(CFLAGS) $(DEP) $(UNITY_DEP) -o $@
 
 $(OBJ)/test_lexer.o: test_lexer.c | $(OBJ)
-	$(CC) $(CFLAGS) -c $<
-	mv test_lexer.o $(OBJ)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(UNITY_DEP): $(UNITY_SRC)/unity.c
-	$(CC) $(CFLAGS) -c $<
-	mv unity.o $(OBJ)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
-	$(CC) $(CFLAGS) -c $<
-	mv *.o $(OBJ)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm $(DEP) $(UNITY_DEP) test_lexer -rf

@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Werror -Wextra -g3 -std=c11 -fsanitize=address,undefined
 
-OBJ = ../../obj
+OBJ = ../../obj/linux
 SRC = ../../src
 CFLAGS += -I$(SRC)
 
@@ -17,6 +17,7 @@ HEADERS = $(addprefix $(SRC)/,common.h dfa.h nfa.h set.h parser.h lexer.h \
 all: test_dfa
 
 $(OBJ):
+	mkdir -p ../../obj
 	mkdir -p $@
 
 test_dfa: $(DEP) $(UNITY_DEP) $(HEADERS)
@@ -25,16 +26,13 @@ test_dfa: $(DEP) $(UNITY_DEP) $(HEADERS)
 	$(CC) $(CFLAGS) $(DEP) $(UNITY_DEP) -o $@
 
 $(OBJ)/test_dfa.o: test_dfa.c | $(OBJ)
-	$(CC) $(CFLAGS) -c $<
-	mv test_dfa.o $(OBJ)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(UNITY_DEP): $(UNITY_SRC)/unity.c
-	$(CC) $(CFLAGS) -c $<
-	mv unity.o $(OBJ)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
-	$(CC) $(CFLAGS) -c $<
-	mv *.o $(OBJ)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm $(DEP) $(UNITY_DEP) test_dfa -rf
