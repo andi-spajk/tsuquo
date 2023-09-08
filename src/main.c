@@ -25,12 +25,15 @@ int main(int argc, char **argv)
 		file_name++;
 	int file_name_len = file_name - argv[1];
 
-	// +4 for ".dot" and +1 for \0
-	file_name = calloc(file_name_len + 4 + 1, sizeof(char));
+	// +5 for "dots/"
+	// +4 for ".dot"
+	// +1 for \0
+	file_name = calloc(file_name_len + 10, 1);
 	if (!file_name)
 		ABORT("fatal memory error\n");
-	memcpy(file_name, argv[1], file_name_len);
-	memcpy(file_name + file_name_len, ".dot", 4);
+	memcpy(file_name, "dots/", 5);
+	memcpy(file_name + 5, argv[1], file_name_len);
+	memcpy(file_name + 5 + file_name_len, ".dot", 4);
 
 	CmpCtrl *cc = init_cmpctrl();
 	if (!cc) {

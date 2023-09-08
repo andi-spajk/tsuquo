@@ -3,9 +3,9 @@ release/
 pseudo/
 main
 debug
-*.dot
+dots/
+svgs/
 *.txt
-*.svg
 
 tests/lexer/test_lexer
 
