@@ -512,84 +512,6 @@ MinimalDFA *minimize(DFA *dfa)
 	return min_dfa;
 }
 
-/* generate_next_range()
-	@f              output file
-	@bitfield       bitfield of ASCII transition chars
-	@i              bit index of the LSB of @bitfield
-	@print_delim    print delimiter
-
-	@return         number of bits consumed
-
-	Derive a regex range from a bitfield of transition chars.
-*/
-static U8 generate_next_range(FILE *f, U64 bitfield, U8 i, bool print_delim)
-{
-	if (!bitfield)
-		return 63;
-
-	U8 original_i = i;
-	U8 left, right;
-	while (!(bitfield & 1)) {
-		bitfield >>= 1;
-		i++;
-	}
-
-	// found the next leftmost 1-bit
-	left = i;
-	right = i;
-
-	// check if there are contiguous 1s, ie a range
-	// if so, find the rightmost 1-bit of the range
-	bitfield >>= 1;
-	i++;
-	while (bitfield & 1) {
-		right = i;
-		bitfield >>= 1;
-		i++;
-	}
-
-	if (print_delim)
-		fprintf(f, "\\n");
-
-	if (left == right) {
-		// one char
-		switch (left) {
-		case '\n':
-			fprintf(f, "\\\\n");
-			break;
-		case '\t':
-			fprintf(f, "\\\\t");
-			break;
-		default:
-			fprintf(f, "%c", left);
-			break;
-		}
-	}else {
-		// range
-		fprintf(f, "[");
-		if (left == '\t')
-			fprintf(f, "\\\\t");
-		else if (left == '\n')
-			fprintf(f, "\\\\n");
-		else
-			fprintf(f, "%c", left);
-
-		if (right - left != 1)
-			fprintf(f, "-");
-		// if the range is 2 adjacent chars, don't print a hyphen
-
-		if (right == '\t')
-			fprintf(f, "\\\\t");
-		else if (right == '\n')
-			fprintf(f, "\\\\n");
-		else
-			fprintf(f, "%c", right);
-		fprintf(f, "]");
-	}
-
-	return i - original_i;
-}
-
 /* generate_transition_label()
 	@f              output file
 	@lower          bitfield of transition chars (ASCII [0,63])
@@ -599,25 +521,82 @@ static U8 generate_next_range(FILE *f, U64 bitfield, U8 i, bool print_delim)
 */
 static void generate_transition_label(FILE *f, U64 lower, U64 upper)
 {
-	bool print_delim = false;
-	U8 shift;
+	U64 bitfield = lower;
 	U8 i = 0;
+	U8 left, right;
+	bool print_delim = false;
+	// print transitions for one contiguous chunk of 1s, and chop the bits
+	// off
 	do {
-		shift = generate_next_range(f, lower, i, print_delim);
-		lower >>= shift;
-		i += shift;
-		print_delim = true;
-	} while (lower);
-	// TODO: if there is no lower range, an extraneous newline is printed
-	// TODO: if a range crosses the border between lower and upper, it gets
-	// printed as 2 separate ranges, eg [ -?][@-~]
-	i = 64;
-	do {
-		shift = generate_next_range(f, upper, i, print_delim);
-		upper >>= shift;
-		i += shift;
-		print_delim = true;
-	} while (upper);
+		// skip leading 0-bits
+		while (!(bitfield & 1)) {
+			bitfield >>= 1;
+			i++;
+			if (i == 64)
+				bitfield = upper;
+			else if (i >= 128)
+				goto STOP;  // YEEEEEEEEEEEEEEAAAAAAAAAAHHHHHHHH
+		}
+
+		// found the next leftmost 1-bit
+		left = i;
+		right = i;
+
+		// check if there are contiguous 1s, ie a range
+		// if so, find the rightmost 1-bit of the range
+		bitfield >>= 1;
+		i++;
+		while (bitfield & 1) {
+			right = i;
+			bitfield >>= 1;
+			i++;
+			if (i == 64)
+				bitfield = upper;
+		}
+
+		if (print_delim)
+			fprintf(f, "\\n");
+		else
+			print_delim = true;
+
+		if (left == right) {
+			// one char
+			switch (left) {
+			case '\n':
+				fprintf(f, "\\\\n");
+				break;
+			case '\t':
+				fprintf(f, "\\\\t");
+				break;
+			default:
+				fprintf(f, "%c", left);
+				break;
+			}
+		} else {
+			// range
+			fprintf(f, "[");
+			if (left == '\t')
+				fprintf(f, "\\\\t");
+			else if (left == '\n')
+				fprintf(f, "\\\\n");
+			else
+				fprintf(f, "%c", left);
+
+			if (right - left != 1)
+				fprintf(f, "-");
+			// if the range is 2 adjacent chars, don't print a hyphen
+
+			if (right == '\t')
+				fprintf(f, "\\\\t");
+			else if (right == '\n')
+				fprintf(f, "\\\\n");
+			else
+				fprintf(f, "%c", right);
+			fprintf(f, "]");
+		}
+	} while (1);
+STOP:
+	return;
 }
 
 /* gen_minimal_dfa_graphviz()

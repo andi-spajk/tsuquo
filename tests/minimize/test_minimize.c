@@ -819,13 +819,13 @@ void test_minimize_and_gen_graphviz(void)
 	destroy_minimal_dfa(min_dfa);
 
 
-	read_line(cc, "for|[fh]*", 9);
+	read_line(cc, "[0-9]+", 6);
 	nfa = parse(cc);
 	dfa = convert_nfa_to_dfa(nfa);
 
 	min_dfa = minimize(dfa);
 	TEST_ASSERT_NOT_NULL(min_dfa);
-	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/forfh.dot"));
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/digits.dot"));
 
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);
@@ -852,6 +852,19 @@ void test_minimize_and_gen_graphviz(void)
 	min_dfa = minimize(dfa);
 	TEST_ASSERT_NOT_NULL(min_dfa);
 	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/there.dot"));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, "[\\t\\n -~]", 9);
+	nfa = parse(cc);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/matchall.dot"));
 
 	destroy_cmpctrl(cc);
 	destroy_nfa_and_states(nfa);

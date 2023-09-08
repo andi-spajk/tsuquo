@@ -6,7 +6,7 @@ My definitions that probably aren't standard
 	Pattern: a sequence of literal/escaped ASCII characters, plus
 	         possible quantifiers
 	Group: a parenthetical regular expression, a sequence of 1 or more
-	patterns, or a sequence of 1 or more ranges
+	       patterns, or a sequence of 1 or more ranges
 
 */
 
