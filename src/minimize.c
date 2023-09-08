@@ -564,11 +564,29 @@ static U8 generate_next_range(FILE *f, U64 bitfield, U8 i, bool print_delim)
 			fprintf(f, "%c", left);
 			break;
 		}
-	} else if (right - left == 1) {
-		fprintf(f, "[%c%c]", left, right);
-	} else {
-		fprintf(f, "[%c-%c]", left, right);
+	}else {
+		// range
+		fprintf(f, "[");
+		if (left == '\t')
+			fprintf(f, "\\\\t");
+		else if (left == '\n')
+			fprintf(f, "\\\\n");
+		else
+			fprintf(f, "%c", left);
+
+		if (right - left != 1)
+			fprintf(f, "-");
+		// if the range is 2 adjacent chars, don't print a hyphen
+
+		if (right == '\t')
+			fprintf(f, "\\\\t");
+		else if (right == '\n')
+			fprintf(f, "\\\\n");
+		else
+			fprintf(f, "%c", right);
+		fprintf(f, "]");
 	}
+
 	return i - original_i;
 }
 

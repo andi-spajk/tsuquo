@@ -100,6 +100,7 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_UINT8('d', cc->token);
 	TEST_ASSERT_EQUAL_UINT8('e', lex(cc));
 	TEST_ASSERT_EQUAL_UINT8('e', cc->token);
+	print_error(cc, "test error");
 	TEST_ASSERT_EQUAL_UINT8('f', lex(cc));
 	TEST_ASSERT_EQUAL_UINT8('f', cc->token);
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));

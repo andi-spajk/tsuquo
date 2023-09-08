@@ -200,6 +200,7 @@ NFA *allowed(CmpCtrl *cc)
 	U8 left, right;
 	if (cc->token > '~') {
 		print_error(cc, "expected ASCII or escape char");
+		cc->flags |= CC_ABORT;
 		return NULL;
 	}
 	while (cc->token <= '~') {

@@ -38,14 +38,8 @@ U8 lex(CmpCtrl *cc)
 	U8 ch = get_char(cc);
 
 	// ignore literal newlines
-	while (ch == '\r') {
+	while (ch == '\r' || ch == '\n')
 		ch = get_char(cc);
-		if (ch == '\n')
-			ch = get_char(cc);
-	}
-	while (ch == '\n') {
-		ch = get_char(cc);
-	}
 
 	if (ch == '\\') {
 		ch = get_char(cc);
@@ -120,8 +114,20 @@ void print_error(const CmpCtrl *cc, const char *msg)
 		return;
 	}
 
-	// buffer isn't null-terminated
-	fwrite(cc->buffer, 1, cc->buffer_len, stdout);
+	// TODO: arrow is misaligned when there are trailing newlines in the
+	// buffer. Probably modify skip variable, or the buffer reader
+
+	U8 ch;
+	int skip = 0;
+	for (int i = 0; i < cc->buffer_len; i++) {
+		ch = cc->buffer[i];
+		while (ch == '\r' || ch == '\n') {
+			i++;
+			skip++;
+			ch = cc->buffer[i];
+		}
+		putchar(ch);
+	}
 	putchar('\n');
 
 	// align error arrow with spaces, must handle 8-width tabs
@@ -129,7 +135,7 @@ void print_error(const CmpCtrl *cc, const char *msg)
 	int tab_align = 0;
 	// use pos-1 because pos always sits one char ahead of the previously
 	// fetched token, which receives the error arrow
-	for (int i = 0; i < cc->pos-1; i++) {
+	for (int i = 0; i < cc->pos-1-skip; i++) {
 		if (tab_align == 8)
 			tab_align = 0;
 
