@@ -350,7 +350,6 @@ void test_convert_nfa_to_dfa(void)
 	CmpCtrl *cc = init_cmpctrl();
 	read_line(cc, "abc|[xb]*", 9);
 	NFA *nfa = parse(cc);
-	index_states(nfa);
 	DFA *dfa = convert_nfa_to_dfa(nfa);
 
 	TEST_ASSERT_NOT_NULL(dfa->delta);
@@ -388,7 +387,6 @@ void test_convert_nfa_to_dfa(void)
 
 	read_line(cc, "a*", 2);
 	nfa = parse(cc);
-	index_states(nfa);
 	dfa = convert_nfa_to_dfa(nfa);
 
 	TEST_ASSERT_NOT_NULL(dfa->delta);

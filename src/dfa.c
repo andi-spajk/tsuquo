@@ -311,6 +311,7 @@ Oh my god this mistake is so obvious in hindsight wtf was I thinking???
 */
 DFA *convert_nfa_to_dfa(NFA *nfa)
 {
+	index_states(nfa);
 	DFA *dfa = subset(nfa);
 	if (!dfa)
 		return NULL;

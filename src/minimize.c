@@ -130,6 +130,10 @@ MinimalDFA *init_minimal_dfa(DFA *dfa)
 			else
 				min_dfa->merge[i][j] = 1;
 		}
+		// values at column indices < j will be uninitialized
+		// this had caused a problem in quotient() --> distinguishable()
+		// i will keep the uninitialized values, since it allows
+		// valgrind to detect it
 	}
 
 	// delta is allocated and constructed later
@@ -220,8 +224,12 @@ bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa)
 	if (i != DEAD_STATE && j != DEAD_STATE) {
 		if (i == min_dfa->rows)
 			return false;
+		// i < j ALWAYS!!!
+		// if i > j then you'll access uninitialized merge[][] memory
+		int actuali = i < j ? i : j;
+		int actualj = i > j ? i : j;
 		// is the pair already marked as distinguishable?
-		if (!min_dfa->merge[i][j])
+		if (!min_dfa->merge[actuali][actualj])
 			return true;
 	}
 

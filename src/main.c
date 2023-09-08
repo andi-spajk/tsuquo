@@ -33,7 +33,6 @@ int main(int argc, char **argv)
 		destroy_cmpctrl(cc);
 		ABORT("compilation failed\n");
 	}
-	index_states(nfa);
 
 	DFA *dfa = convert_nfa_to_dfa(nfa);
 	if (!dfa) {
