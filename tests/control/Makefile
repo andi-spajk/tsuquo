@@ -15,7 +15,6 @@ HEADERS = $(addprefix $(SRC)/,common.h control.h)
 all: test_control
 
 $(OBJ):
-	mkdir -p ../../obj
 	mkdir -p $@
 
 test_control: $(DEP) $(UNITY_DEP) $(HEADERS)

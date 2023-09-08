@@ -19,11 +19,9 @@ HEADERS = $(addprefix $(SRC)/,common.h control.h dfa.h lexer.h minimize.h nfa.h\
 all: main
 
 $(REL):
-	mkdir -p release
 	mkdir -p $@
 
 $(OBJ):
-	mkdir -p obj
 	mkdir -p $@
 
 main: $(REL_DEP) $(HEADERS) | $(REL)

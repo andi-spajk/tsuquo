@@ -17,7 +17,6 @@ HEADERS = $(addprefix $(SRC)/,common.h dfa.h nfa.h set.h parser.h lexer.h \
 all: test_dfa
 
 $(OBJ):
-	mkdir -p ../../obj
 	mkdir -p $@
 
 test_dfa: $(DEP) $(UNITY_DEP) $(HEADERS)

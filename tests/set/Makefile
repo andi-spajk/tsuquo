@@ -15,7 +15,6 @@ HEADERS = $(addprefix $(SRC)/,set.h)
 all: test_set
 
 $(OBJ):
-	mkdir -p ../../obj
 	mkdir -p $@
 
 test_set: $(DEP) $(UNITY_DEP) $(HEADERS)

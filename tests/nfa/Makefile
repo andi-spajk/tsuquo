@@ -15,7 +15,6 @@ HEADERS = $(addprefix $(SRC)/,common.h nfa.h set.h)
 all: test_nfa
 
 $(OBJ):
-	mkdir -p ../../obj
 	mkdir -p $@
 
 test_nfa: $(DEP) $(UNITY_DEP) $(HEADERS)

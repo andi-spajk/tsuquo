@@ -15,7 +15,6 @@ HEADERS = $(addprefix $(SRC)/,common.h lexer.h control.h)
 all: test_lexer
 
 $(OBJ):
-	mkdir -p ../../obj
 	mkdir -p $@
 
 test_lexer: $(DEP) $(UNITY_DEP) $(HEADERS)

@@ -17,7 +17,6 @@ HEADERS = $(addprefix $(SRC)/,common.h minimize.h dfa.h nfa.h set.h parser.h \
 all: test_minimize
 
 $(OBJ):
-	mkdir -p ../../obj
 	mkdir -p $@
 
 test_minimize: $(DEP) $(UNITY_DEP) $(HEADERS)
