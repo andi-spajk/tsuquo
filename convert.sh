@@ -15,7 +15,7 @@ elif [[ $# != 0 ]]; then
   echo "error: invalid cmdline args"
   echo "USAGE: $ ./convert.sh extension"
   echo
-  echo "valid extensions are svg, png, and jpg"
+  echo "valid extensions are svg, png, and jpg/jpeg"
   exit
 fi
 # no args means we automatically use svg
