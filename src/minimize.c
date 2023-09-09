@@ -413,7 +413,7 @@ MinimalDFA *construct_minimal_states(MinimalDFA *min_dfa, DFA *dfa)
 	                or NULL if not found
 
 	Search minimal DFA states (represented as sets) for a particular index
-	of a constituent unminial DFA state.
+	of a constituent unminimal DFA state.
 */
 static Set *find_min_set(MinimalDFA *min_dfa, int state_index)
 {
@@ -524,7 +524,7 @@ static void generate_transition_label(FILE *f, U64 lower, U64 upper)
 	U64 bitfield = lower;
 	U8 i = 0;
 	U8 left, right;
-	bool print_delim = false;
+	bool first_time = true;
 	// print transitions for one contiguous chunk of 1s, and chop the bits
 	// off
 	do {
@@ -554,14 +554,20 @@ static void generate_transition_label(FILE *f, U64 lower, U64 upper)
 				bitfield = upper;
 		}
 
-		if (print_delim)
+		if (!first_time)
 			fprintf(f, "\\n");
 		else
-			print_delim = true;
+			first_time = false;
 
 		if (left == right) {
 			// one char
 			switch (left) {
+			case '\\':
+				fprintf(f, "\\\\");
+				break;
+			case '\"':
+				fprintf(f, "\\\"");
+				break;
 			case '\n':
 				fprintf(f, "\\\\n");
 				break;

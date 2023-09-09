@@ -53,6 +53,9 @@ file will be generated in `dots/`.
 SVGs are saved in `svgs/`. (Sorry, there's no Windows batch script for
 converting yet.)
 
+    * Known issue on Linux: after cloning the repo, the `.sh` files lose their
+    executable mode. Run `chmod +x whatever_file.sh` to fix this.
+
 5. If you want to clean the binaries: on Linux, run `make clean` to purge the
 release binary and object files. Run `make deepclean` to purge everything. On
 Windows, run `clean.bat` to purge everything.
@@ -70,3 +73,5 @@ test directory and run `make`. (Sorry, no Windows support for unit tests.)
 # TODO
 * raylib GUI
 * add support for matchall `.` and negation `[^a]`
+* fix bug when cloning a `.sh` file (see step 4 from Building section). The file
+also shows up as modified in `git status`

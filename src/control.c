@@ -1,6 +1,6 @@
 /** control.c
 
-Compiler control stores all necessary info for each phase of the program.
+Compiler control stores all necessary info for each phase of the compilation.
 
 */
 
