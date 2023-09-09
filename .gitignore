@@ -1,11 +1,11 @@
 obj/
 release/
 pseudo/
-main
+tsuquo
 debug
 dots/
 saves/
-main.exe
+tsuquo.exe
 debug.exe
 
 tests/lexer/test_lexer

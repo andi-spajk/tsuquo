@@ -27,7 +27,7 @@ gcc %CFLAGS% %REL_FLAGS% %SRC%\nfa.c -c -o %REL%\nfa.o
 gcc %CFLAGS% %REL_FLAGS% %SRC%\parser.c -c -o %REL%\parser.o
 gcc %CFLAGS% %REL_FLAGS% %SRC%\set.c -c -o %REL%\set.o
 
-gcc %CFLAGS% %REL_FLAGS% %REL_DEP% -o main.exe
+gcc %CFLAGS% %REL_FLAGS% %REL_DEP% -o tsuquo.exe
 
 :: debug build
 gcc %CFLAGS% %DBG_FLAGS% %SRC%\main.c -c -o %OBJ%\debug.o

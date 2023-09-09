@@ -16,7 +16,7 @@ HEADERS = $(addprefix $(SRC)/,common.h control.h dfa.h lexer.h minimize.h nfa.h\
 
 .PHONY: all clean deepclean
 
-all: main
+all: tsuquo
 
 $(REL):
 	mkdir -p $@
@@ -24,7 +24,7 @@ $(REL):
 $(OBJ):
 	mkdir -p $@
 
-main: $(REL_DEP) $(HEADERS) | $(REL)
+tsuquo: $(REL_DEP) $(HEADERS) | $(REL)
 	$(CC) $(CFLAGS) $(REL_FLAGS) $(REL_DEP) -o $@
 	mkdir -p dots
 	mkdir -p saves
@@ -47,7 +47,7 @@ $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h | $(OBJ)
 	$(CC) $(CFLAGS) $(DBG_FLAGS) -c $< -o $@
 
 clean:
-	rm $(REL_DEP) main -rf
+	rm $(REL_DEP) tsuquo -rf
 
 deepclean:
-	rm $(REL_DEP) $(DBG_DEP) main debug -rf
+	rm $(REL_DEP) $(DBG_DEP) tsuquo debug -rf
