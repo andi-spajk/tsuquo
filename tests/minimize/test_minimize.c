@@ -866,6 +866,50 @@ void test_minimize_and_gen_graphviz(void)
 	TEST_ASSERT_NOT_NULL(min_dfa);
 	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/matchall.dot"));
 
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
+	read_line(cc, ".", 1);
+	nfa = parse(cc);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/wildcard.dot"));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+/*
+works:
+	.*a
+	.*abc
+	a.*
+	abc.*
+	a.a
+	abc.abc
+	a.+
+doesn't work:
+	a.*a
+	abc.*a
+	abc.*abc
+	a.+a
+the pattern? idk
+wildcard with a quantifier. then other patterns on both left and right
+the error is always a stack overflow, according to the sanitizer
+maybe i need a more efficient algorithm?
+*/
+	read_line(cc, "a.+a", 4);
+	nfa = parse(cc);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/wildcard2.dot"));
+
 	destroy_cmpctrl(cc);
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);

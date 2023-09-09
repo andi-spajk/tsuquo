@@ -10,13 +10,18 @@ construction, and ***quo***tient construction.
 
 Currently, tsuquo can support the following:
 * ASCII characters
-* Quantifiers: `* ? +`
+* Quantifiers `* ? +`
 * Parentheses `()`
 * Alternations `|`
 * Escape sequences `\(` `\)` `\[` `\]` `\*` `\?` `\+` `\|` `\n` `\t` `\\`
 * Ranges `[a-z0-9!@#]`
   * In a range, all special characters must still be escaped, e.g. `[\[-\]]`
   * To match `-` in a range, put it as the first character, e.g. `[-abc]`
+
+Tsuquo **cannot** support the following:
+* Wildcard `.`
+  * It SOMETIMES works, but it may crash the program. Try at your own risk.
+* Negation `^`
 
 
 # Building
@@ -77,7 +82,6 @@ test directory and run `make`. (Sorry, no Windows support for unit tests.)
 
 # TODO
 
-* add github releases
 * add support for matchall `.` and negation `[^a]`
 * fix bug when cloning a `.sh` file (see step 4 from Building section). The file
 also shows up as modified in `git status`

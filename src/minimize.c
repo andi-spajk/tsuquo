@@ -527,6 +527,12 @@ static inline bool needs_escape(U8 ch)
 */
 static void generate_transition_label(FILE *f, U64 lower, U64 upper)
 {
+	if (lower == (0xFFFFFFFF00000000 | 1ULL << '\n' | 1ULL << '\t') &&
+	    upper == 0x7FFFFFFFFFFFFFFF) {
+		fprintf(f, "&Sigma;");
+		return;
+	}
+
 	U64 bitfield = lower;
 	U8 i = 0;
 	U8 left, right;

@@ -78,6 +78,7 @@ void test_parse(void)
 	const char test_53[] = "[\\.-9]";
 	const char test_54[] = ".*";
 	const char test_55[] = "([abc].)*";
+	const char test_56[] = "a.a";
 
 	// for test_24
 	U64 check64_127 = 0;
@@ -167,6 +168,7 @@ void test_parse(void)
 	TEST_PARSE_HELPER(cc, test_53, nfa, "dots/test_53.dot");
 	TEST_PARSE_HELPER(cc, test_54, nfa, "dots/test_54.dot");
 	TEST_PARSE_HELPER(cc, test_55, nfa, "dots/test_55.dot");
+	TEST_PARSE_HELPER(cc, test_56, nfa, "dots/test_56.dot");
 
 	destroy_cmpctrl(cc);
 }
