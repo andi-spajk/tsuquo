@@ -5,8 +5,8 @@ main
 debug
 dots/
 svgs/
-*.txt
-*.exe
+main.exe
+debug.exe
 
 tests/lexer/test_lexer
 

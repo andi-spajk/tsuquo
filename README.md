@@ -10,7 +10,7 @@ construction, and ***quo***tient construction.
 
 Currently, tsuquo can support the following:
 * ASCII characters
-* Wildcards: `* ? +`
+* Quantifiers: `* ? +`
 * Parentheses `()`
 * Alternations `|`
 * Escape sequences `\(` `\)` `\[` `\]` `\*` `\?` `\+` `\|` `\n` `\t` `\\`
@@ -35,7 +35,8 @@ Currently, tsuquo can support the following:
     * `gcc` is the default. To change it, run `make CC=yourcompiler`. (Sorry,
     can't change it on Windows.)
 
-2. Type a regular expression into a text file and save it.
+2. Type a regular expression into a text file and save it. Try the ones in
+`examples/`!
 
     * _LITERAL NEWLINES ARE IGNORED._ If you have a file like:
 ```
@@ -66,12 +67,15 @@ Windows, run `clean.bat` to purge everything.
 Unit testing is done with the Unity framework:
 https://github.com/ThrowTheSwitch/Unity
 
-All required files are already included in `tsuquo/unity/`. Just navigate to any
+All required files are already included in `unity/`. Just navigate to any
 test directory and run `make`. (Sorry, no Windows support for unit tests.)
 
 
 # TODO
 * raylib GUI
+* add github releases
+* graphviz generation doesn't escape special chars when printing a range, even
+though tsuquo requires the input to do that
 * add support for matchall `.` and negation `[^a]`
 * fix bug when cloning a `.sh` file (see step 4 from Building section). The file
 also shows up as modified in `git status`
