@@ -146,6 +146,41 @@ Table of Indistinguishable States
 	TEST_ASSERT_FALSE(distinguishable(2, 4, min_dfa, dfa));
 	TEST_ASSERT_FALSE(distinguishable(3, 4, min_dfa, dfa));
 
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+	read_line(cc, "hi|this", 7);
+	nfa = parse(cc);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+/*
+Table of Indistinguishable States
+----------------+----------------
+     Final      |     Initial
+----------------+----------------
+  1 2 3 4 5 6   |     1 2 3 4 5 6
+0 F F F F F F   |   0         F F
+1   F F F F F   |   1         F F
+2     F F F F   |   2         F F
+3       F F F   |   3         F F
+4         F F   |   4         F F
+5           T   |   5
+*/
+
+	TEST_ASSERT_TRUE(distinguishable(0, 1, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(0, 2, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(0, 3, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(0, 4, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(1, 2, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(1, 3, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(1, 4, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(2, 3, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(2, 4, min_dfa, dfa));
+	TEST_ASSERT_TRUE(distinguishable(3, 4, min_dfa, dfa));
+
+	TEST_ASSERT_FALSE(distinguishable(5, 6, min_dfa, dfa));
+
 	destroy_cmpctrl(cc);
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);
@@ -330,6 +365,46 @@ equivalence classes:
 	TEST_ASSERT_EQUAL_INT_ARRAY(there_exp6, &(min_dfa->merge[6][7]), 3);
 	TEST_ASSERT_EQUAL_INT_ARRAY(there_exp7, &(min_dfa->merge[7][8]), 2);
 	TEST_ASSERT_EQUAL_INT_ARRAY(there_exp8, &(min_dfa->merge[8][9]), 1);
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+/*
+equivalence classes:
+{0}
+{1}
+{2}
+{3}
+{4}
+{5,6}
+  | 1 | 2 | 3 | 4 | 5 | 6 |
+0 | F | F | F | F | F | F |
+1 |   | F | F | F | F | F |
+2 |   |   | F | F | F | F |
+3 |   |   |   | F | F | F |
+4 |   |   |   |   | F | F |
+5 |   |   |   |   |   |   |
+*/
+	read_line(cc, "hi|this", 7);
+	nfa = parse(cc);
+	dfa = convert_nfa_to_dfa(nfa);
+	min_dfa = init_minimal_dfa(dfa);
+	TEST_ASSERT_EQUAL_INT(0, quotient(min_dfa, dfa));
+
+	int hithis_exp0[] = {0,0,0,0,0,0};
+	int hithis_exp1[] =   {0,0,0,0,0};
+	int hithis_exp2[] =     {0,0,0,0};
+	int hithis_exp3[] =       {0,0,0};
+	int hithis_exp4[] =         {0,0};
+	int hithis_exp5[] =           {1};
+
+	TEST_ASSERT_EQUAL_INT_ARRAY(hithis_exp0, &(min_dfa->merge[0][1]), 6);
+	TEST_ASSERT_EQUAL_INT_ARRAY(hithis_exp1, &(min_dfa->merge[1][2]), 5);
+	TEST_ASSERT_EQUAL_INT_ARRAY(hithis_exp2, &(min_dfa->merge[2][3]), 4);
+	TEST_ASSERT_EQUAL_INT_ARRAY(hithis_exp3, &(min_dfa->merge[3][4]), 3);
+	TEST_ASSERT_EQUAL_INT_ARRAY(hithis_exp4, &(min_dfa->merge[4][5]), 2);
+	TEST_ASSERT_EQUAL_INT_ARRAY(hithis_exp5, &(min_dfa->merge[5][6]), 1);
 
 	destroy_nfa_and_states(nfa);
 	destroy_dfa(dfa);
@@ -858,6 +933,19 @@ void test_minimize_and_gen_graphviz(void)
 	destroy_minimal_dfa(min_dfa);
 
 
+	read_line(cc, "hi|this", 7);
+	nfa = parse(cc);
+	dfa = convert_nfa_to_dfa(nfa);
+
+	min_dfa = minimize(dfa);
+	TEST_ASSERT_NOT_NULL(min_dfa);
+	TEST_ASSERT_EQUAL_INT(0, gen_minimal_dfa_graphviz(min_dfa, "dots/hithis.dot"));
+
+	destroy_nfa_and_states(nfa);
+	destroy_dfa(dfa);
+	destroy_minimal_dfa(min_dfa);
+
+
 	read_line(cc, "[\\t\\n -~]", 9);
 	nfa = parse(cc);
 	dfa = convert_nfa_to_dfa(nfa);
@@ -902,7 +990,7 @@ wildcard with a quantifier. then other patterns on both left and right
 the error is always a stack overflow, according to the sanitizer
 maybe i need a more efficient algorithm?
 */
-	read_line(cc, "a.+a", 4);
+	read_line(cc, "a.+", 3);
 	nfa = parse(cc);
 	dfa = convert_nfa_to_dfa(nfa);
 
