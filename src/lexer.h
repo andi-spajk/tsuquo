@@ -10,7 +10,9 @@ Module definition for the lexical analyzer.
 #include "common.h"
 #include "control.h"
 
-// tokens for special regex chars like ( * ? ] etc.
+// tokens for special regex chars like . ( * ? ] etc.
+#define TK_WILDCARD     127  // replaces ASCII 127 = DEL
+                             // who tf gonna match the DELETE char anyway???
 #define TK_EOF          128
 #define TK_LPAREN       129
 #define TK_RPAREN       130
@@ -30,7 +32,7 @@ chars.
 
 Full character mapping:
         0: indicates epsilon transition (NOT a token)
-  [1,127]: regular ASCII (what the user enters)
+  [1,127]: regular ASCII or . (what the user enters)
 [128,255]: special tokens
 */
 

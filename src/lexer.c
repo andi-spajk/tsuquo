@@ -40,7 +40,8 @@ U8 lex(CmpCtrl *cc)
 	if (ch == '\\') {
 		ch = get_char(cc);
 		switch (ch) {
-		case '(':  // fallthrough
+		case '.':
+		case '(':
 		case ')':
 		case '[':
 		case '|':
@@ -48,13 +49,14 @@ U8 lex(CmpCtrl *cc)
 		case '?':
 		case '+':
 		case ']':
-		case '\\': break;
+		case '\\': break;  // retain the value in ch
 		case 'n': ch = '\n'; break;
 		case 't': ch = '\t'; break;
 		default: ch = TK_ILLEGAL; break;  // invalid escape sequence
 		}
 	} else {
 		switch (ch) {
+		case '.': ch = TK_WILDCARD; break;
 		case '(': ch = TK_LPAREN; break;
 		case ')': ch = TK_RPAREN; break;
 		case '[': ch = TK_LBRACKET; break;
@@ -88,6 +90,7 @@ void print_error(const CmpCtrl *cc, const char *msg)
 	if (!(cc->flags & CC_DISABLE_INSTEAD_FOUND)) {
 		printf(", instead found");
 		switch (cc->token) {
+		case TK_WILDCARD: printf(" wildcard"); break;
 		case TK_EOF: printf(" end of regex"); break;
 		case TK_LPAREN: printf(" '('"); break;
 		case TK_RPAREN: printf(" ')'"); break;

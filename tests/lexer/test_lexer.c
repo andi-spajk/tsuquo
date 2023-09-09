@@ -54,6 +54,8 @@ void test_lex(void)
 	print_error(cc, "fake error, expected '(' or smth lol");
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
 
 	TEST_ASSERT_EQUAL_INT(0, read_file(cc, "../example2.txt"));
 	for (int i = 0; i < EXAMPLE2_LEN; i++) {
@@ -81,11 +83,15 @@ void test_lex(void)
 	TEST_ASSERT_EQUAL_UINT8('\n', cc->token);
 	TEST_ASSERT_EQUAL_UINT8('\\', lex(cc));
 	TEST_ASSERT_EQUAL_UINT8('\\', cc->token);
+	TEST_ASSERT_EQUAL_UINT8('.', lex(cc));
+	TEST_ASSERT_EQUAL_UINT8('.', cc->token);
 	TEST_ASSERT_EQUAL_UINT8(TK_ILLEGAL, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_ILLEGAL, cc->token);
 	cc->flags = 0;
 	print_error(cc, "unknown character");
 	// read past illegal token
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
 
@@ -103,6 +109,10 @@ void test_lex(void)
 	print_error(cc, "test error");
 	TEST_ASSERT_EQUAL_UINT8('f', lex(cc));
 	TEST_ASSERT_EQUAL_UINT8('f', cc->token);
+	TEST_ASSERT_EQUAL_UINT8(TK_WILDCARD, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_WILDCARD, cc->token);
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
+	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, lex(cc));
 	TEST_ASSERT_EQUAL_UINT8(TK_EOF, cc->token);
 
