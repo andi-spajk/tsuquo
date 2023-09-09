@@ -132,7 +132,7 @@ NFA *quantifier(CmpCtrl *cc, NFA *nfa)
 		lex(cc);
 		return nfa;
 	} else if (cc->token <= TK_PIPE) {
-		// ASCII, EOF, (, ), [, |
+		// ASCII, `.`, EOF, (, ), [, |
 		return nfa;
 	}
 	print_error(cc, "expected '(', ')', '[', '|', or pattern");
@@ -143,7 +143,7 @@ NFA *pattern(CmpCtrl *cc)
 {
 	NFA *final_nfa = NULL;
 	NFA *thompson;
-	while (cc->token < 128) {
+	while (cc->token <= TK_WILDCARD) {
 		thompson = init_thompson_nfa(cc->token);
 		if (!thompson) {
 			cc->flags |= CC_DISABLE_LINE_PRINT;

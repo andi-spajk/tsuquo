@@ -71,6 +71,13 @@ void test_parse(void)
 	const char test_46[] = "[2-901]";
 	const char test_47[] = "[X-\\[]";
 	const char test_48[] = "(0|(1(01*(00)*0)*1)*)*";
+	const char test_49[] = ".";
+	const char test_50[] = "\\.";
+	const char test_51[] = "..";
+	const char test_52[] = "[\\.]";
+	const char test_53[] = "[\\.-9]";
+	const char test_54[] = ".*";
+	const char test_55[] = "([abc].)*";
 
 	// for test_24
 	U64 check64_127 = 0;
@@ -153,6 +160,13 @@ void test_parse(void)
 	TEST_PARSE_HELPER(cc, test_46, nfa, "dots/test_46.dot");
 	TEST_PARSE_HELPER(cc, test_47, nfa, "dots/test_47.dot");
 	TEST_PARSE_HELPER(cc, test_48, nfa, "dots/test_48.dot");
+	TEST_PARSE_HELPER(cc, test_49, nfa, "dots/test_49.dot");
+	TEST_PARSE_HELPER(cc, test_50, nfa, "dots/test_50.dot");
+	TEST_PARSE_HELPER(cc, test_51, nfa, "dots/test_51.dot");
+	TEST_PARSE_HELPER(cc, test_52, nfa, "dots/test_52.dot");
+	TEST_PARSE_HELPER(cc, test_53, nfa, "dots/test_53.dot");
+	TEST_PARSE_HELPER(cc, test_54, nfa, "dots/test_54.dot");
+	TEST_PARSE_HELPER(cc, test_55, nfa, "dots/test_55.dot");
 
 	destroy_cmpctrl(cc);
 }
@@ -201,6 +215,10 @@ void test_errors_and_recovery(void)
 	TEST_ERROR_HELPER(cc, "[a-c*",          nfa);
 	TEST_ERROR_HELPER(cc, "[a-c\\*",        nfa);
 	TEST_ERROR_HELPER(cc, "[q-\\[]",        nfa);
+	TEST_ERROR_HELPER(cc, "[.]",            nfa);
+	TEST_ERROR_HELPER(cc, "[.-A]",          nfa);
+	TEST_ERROR_HELPER(cc, "[\\(-.]",        nfa);
+	TEST_ERROR_HELPER(cc, "[abc.]",         nfa);
 
 	destroy_cmpctrl(cc);
 }

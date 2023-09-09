@@ -442,6 +442,10 @@ void test_graphviz_other(void)
 	// .
 	NFA *wildcard = init_thompson_nfa(TK_WILDCARD);
 	gen_nfa_graphviz(wildcard, "dots/wildcard.dot");
+	U64 exp0_63 = 0xFFFFFFFF00000000 | 1ULL << '\n' | 1ULL << '\t';
+	U64 exp64_127 = 0x7FFFFFFFFFFFFFFF;
+	TEST_ASSERT_EQUAL_UINT64(exp0_63, wildcard->alphabet0_63);
+	TEST_ASSERT_EQUAL_UINT64(exp64_127, wildcard->alphabet64_127);
 	destroy_nfa_and_states(wildcard);
 }
 
