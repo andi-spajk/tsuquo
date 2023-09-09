@@ -22,6 +22,7 @@ Currently, tsuquo can support the following:
 # Building
 
 ## Requirements
+
 * make
 * Graphviz: https://graphviz.org/download/
 
@@ -45,17 +46,20 @@ def|
 
 lol
 ```
-This will be parsed as `abcdef|lol`.
+This will be parsed as `abcdef|lol`. See `examples/c_tokens.txt` for a
+self-explanatory justification.
 
 3. Run `./main your_regex_file.txt` or `main.exe your_regex_file.txt`. A `.dot`
 file will be generated in `dots/`.
 
-4. Run `./convert.sh` to automatically converts all files in `dots/` to SVGs.
-SVGs are saved in `svgs/`. (Sorry, there's no Windows batch script for
-converting yet.)
+4. Run `./convert.sh` to automatically convert all files in `dots/` to `.svg`s
+(default). To specify a different image type, supply the extension as an
+argument, e.g. `./convert.sh png`. All images are saved in `saves/`. (Sorry,
+there's no Windows batch script for converting yet.)
 
+    * Supported image extensions are: `.svg` `.png` `.jpg` `.jpeg`
     * Known issue on Linux: after cloning the repo, the `.sh` files lose their
-    executable mode. Run `chmod +x whatever_file.sh` to fix this.
+    executable mode. For now, run `chmod +x whatever_file.sh` to fix this.
 
 5. If you want to clean the binaries: on Linux, run `make clean` to purge the
 release binary and object files. Run `make deepclean` to purge everything. On
@@ -72,6 +76,7 @@ test directory and run `make`. (Sorry, no Windows support for unit tests.)
 
 
 # TODO
+
 * raylib GUI
 * add github releases
 * graphviz generation doesn't escape special chars when printing a range, even

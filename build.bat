@@ -3,7 +3,7 @@ mkdir release
 mkdir obj\windows
 mkdir release\windows
 mkdir dots
-mkdir svgs
+mkdir saves
 
 set CFLAGS=-Wall -Werror -Wextra -std=c11
 set REL_FLAGS=-O3

@@ -27,7 +27,7 @@ $(OBJ):
 main: $(REL_DEP) $(HEADERS) | $(REL)
 	$(CC) $(CFLAGS) $(REL_FLAGS) $(REL_DEP) -o $@
 	mkdir -p dots
-	mkdir -p svgs
+	mkdir -p saves
 
 $(REL)/main.o: $(SRC)/main.c | $(REL)
 	$(CC) $(CFLAGS) $(REL_FLAGS) -c $< -o $@
@@ -38,7 +38,7 @@ $(REL)/%.o: $(SRC)/%.c $(SRC)/%.h | $(REL)
 debug: $(DBG_DEP) $(HEADERS) | $(OBJ)
 	$(CC) $(CFLAGS) $(DBG_FLAGS) $(DBG_DEP) -o $@
 	mkdir -p dots
-	mkdir -p svgs
+	mkdir -p saves
 
 $(OBJ)/debug.o: $(SRC)/main.c | $(OBJ)
 	$(CC) $(CFLAGS) $(DBG_FLAGS) -c $< -o $@
