@@ -230,7 +230,7 @@ Set *set_union(Set *lhs, Set *rhs)
 	if (!rhs->head)
 		return lhs;
 
-	// working solution but not a smart solution
+	// TODO: this is a working solution but not a smart solution
 	Node *curr = rhs->head;
 	while (curr) {
 		// set_insert will make new nodes in lhs and copy the elements
@@ -249,7 +249,7 @@ Set *set_union(Set *lhs, Set *rhs)
 	@return         Set iterator
 
 	Return an iterator of the Set. To access the element, the user should
-	dereference the iterator.
+	dereference like so: (DataType *)(iterator->element)
 */
 Iterator *set_begin(Set *set)
 {
