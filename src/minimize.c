@@ -539,7 +539,7 @@ MinimalDFA *minimize(DFA *dfa)
 // check if a character needs to be escaped in a regex range
 static inline bool needs_escape(U8 ch)
 {
-	return ch == ']' || ch == '\\' /* || ch == '^'*/ ;
+	return ch == ']' || ch == '\\';
 }
 
 /* generate_transition_label()
@@ -621,6 +621,11 @@ static void generate_transition_label(FILE *f, U64 lower, U64 upper)
 				fprintf(f, "\\\\t");
 			} else if (left == '\n') {
 				fprintf(f, "\\\\n");
+			} else if (left == '\"') {
+				fprintf(f, "\\\"");
+				// double quote needs an escape because we are
+				// in a string, not because we are in a regex
+				// range
 			} else {
 				if (needs_escape(left))
 					fprintf(f, "\\\\");
@@ -635,6 +640,8 @@ static void generate_transition_label(FILE *f, U64 lower, U64 upper)
 				fprintf(f, "\\\\t");
 			} else if (right == '\n') {
 				fprintf(f, "\\\\n");
+			} else if (right == '\"') {
+				fprintf(f, "\\\"");
 			} else {
 				if (needs_escape(right))
 					fprintf(f, "\\\\");

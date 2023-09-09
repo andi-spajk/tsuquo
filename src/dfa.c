@@ -462,7 +462,7 @@ int gen_dfa_graphviz(DFA *dfa, const char *file_name, bool include_nfastates)
 				fprintf(f, " [label=\"\\\\t\"]\n");
 				break;
 			case '\n':
-				fprintf(f, " [label=\"\\\\t\"]\n");
+				fprintf(f, " [label=\"\\\\n\"]\n");
 				break;
 			default:
 				fprintf(f, " [label=\"%c\"]\n",
