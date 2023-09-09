@@ -223,10 +223,10 @@ bool distinguishable(int i, int j, MinimalDFA *min_dfa, DFA *dfa)
 	// dead/error state doesn't have a spot in the merge[][] table
 	if (i != DEAD_STATE && j != DEAD_STATE) {
 		if (i == min_dfa->rows) {
-			// we can't index the row with i so flip the indices
-			// and then check if the pair is already marked as
-			// distinguishable
 /*
+We can't index the row with i so flip the indices and then check if the pair is
+already marked as distinguishable.
+
 If there are N states, they are numbered from 0..N-1. There are N columns (last
 index N-1) but only N-1 rows (last index N-2).
 So the highest that j can go is N-1, but in this if-block, we know that i == N-1
@@ -235,6 +235,13 @@ Since we checked i == j which was false, j is not dead and not i. i is currently
 the maximum possible value that j could take, so if j != i then j must be less
 than i.
 j therefore must be in interval [0, rows). We can safely index the row with j.
+
+We can't use the check that comes after this if-block, because in there, we need
+to continue with the regular distinguishablility algorithm if the check fails.
+But when i == rows we definitely cannot do that since it would require us to
+access row index i which doesn't exist
+So that's why we need this separate if-block, so we can do `return false` at the
+very end without breaking the other scenario.
 */
 			if (!min_dfa->merge[j][i])
 				return true;
