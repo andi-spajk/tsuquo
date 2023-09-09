@@ -10,6 +10,7 @@ expressions.
 #include <stdlib.h>
 
 #include "common.h"
+#include "lexer.h"
 #include "nfa.h"
 #include "set.h"
 
@@ -114,13 +115,30 @@ void destroy_nfa_and_states(NFA *nfa)
 /* init_thompson_nfa()
 	@ch             the character which triggers the transition
 
-	@return         ptr to newly constructed NFA
+	@return         ptr to newly constructed NFA, or NULL if fail
 
 	Construct a basic Thompson NFA unit: one start state and one accept
-	state, with a single transition on @ch.
+	state, with a single transition on @ch. Exception: if @ch is the
+	wildcard `.`, produce the appropriate NFA.
 */
 NFA *init_thompson_nfa(U8 ch)
 {
+	if (ch == TK_WILDCARD) {
+		NFA *wildcard = init_range_nfa(' ', '~');
+		if (!wildcard)
+			return NULL;
+		NFA *tab = init_thompson_nfa('\t');
+		if (!tab)
+			return NULL;
+		NFA *newline = init_thompson_nfa('\n');
+		if (!newline)
+			return NULL;
+
+		NFA *result = nfa_union(tab, newline);
+		result = nfa_union(wildcard, result);
+		return result;
+	}
+
 	NFAState *start = init_nfastate();
 	NFAState *accept = init_nfastate();
 	NFA *nfa = init_nfa();

@@ -2,6 +2,7 @@
 
 #include "../../unity/unity.h"
 #include "common.h"
+#include "lexer.h"
 #include "nfa.h"
 
 void setUp(void) {}
@@ -88,6 +89,12 @@ void test_init_thompson_nfa(void)
 	TEST_ASSERT_TRUE(set_find(tab->mem_region, tab->accept));
 
 	destroy_nfa_and_states(tab);
+
+	// it makes more sense to test wildcard NFAs in gen_nfa_graphviz
+	// since wildcard would call nfa_union() and init_range_nfa()
+	// by the time we generate a graphviz, those other functions have been
+	// well tested. besides, the only way to practically examine an NFA for
+	// the wildcard is by examining the graphviz
 }
 
 void test_nfa_union(void)
@@ -431,6 +438,11 @@ void test_graphviz_other(void)
 	NFA *newline = init_thompson_nfa('\n');
 	gen_nfa_graphviz(newline, "dots/newline.dot");
 	destroy_nfa_and_states(newline);
+
+	// .
+	NFA *wildcard = init_thompson_nfa(TK_WILDCARD);
+	gen_nfa_graphviz(wildcard, "dots/wildcard.dot");
+	destroy_nfa_and_states(wildcard);
 }
 
 void test_epsilon_closure(void)
