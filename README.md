@@ -77,10 +77,7 @@ test directory and run `make`. (Sorry, no Windows support for unit tests.)
 
 # TODO
 
-* raylib GUI
 * add github releases
-* graphviz generation doesn't escape special chars when printing a range, even
-though tsuquo requires the input to do that
 * add support for matchall `.` and negation `[^a]`
 * fix bug when cloning a `.sh` file (see step 4 from Building section). The file
 also shows up as modified in `git status`

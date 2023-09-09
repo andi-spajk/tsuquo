@@ -512,6 +512,12 @@ MinimalDFA *minimize(DFA *dfa)
 	return min_dfa;
 }
 
+// check if a character needs to be escaped in a regex range
+static inline bool needs_escape(U8 ch)
+{
+	return ch == ']' || ch == '\\' /* || ch == '^'*/ ;
+}
+
 /* generate_transition_label()
 	@f              output file
 	@lower          bitfield of transition chars (ASCII [0,63])
@@ -581,23 +587,29 @@ static void generate_transition_label(FILE *f, U64 lower, U64 upper)
 		} else {
 			// range
 			fprintf(f, "[");
-			if (left == '\t')
+			if (left == '\t') {
 				fprintf(f, "\\\\t");
-			else if (left == '\n')
+			} else if (left == '\n') {
 				fprintf(f, "\\\\n");
-			else
+			} else {
+				if (needs_escape(left))
+					fprintf(f, "\\\\");
 				fprintf(f, "%c", left);
+			}
 
 			if (right - left != 1)
 				fprintf(f, "-");
-			// if the range is 2 adjacent chars, don't print a hyphen
+			// if range is 2 adjacent chars, don't print a hyphen
 
-			if (right == '\t')
+			if (right == '\t') {
 				fprintf(f, "\\\\t");
-			else if (right == '\n')
+			} else if (right == '\n') {
 				fprintf(f, "\\\\n");
-			else
+			} else {
+				if (needs_escape(right))
+					fprintf(f, "\\\\");
 				fprintf(f, "%c", right);
+			}
 			fprintf(f, "]");
 		}
 	} while (1);
