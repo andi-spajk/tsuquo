@@ -2,6 +2,7 @@
 *.h text eol=lf
 *.txt text eol=auto
 Makefile text eol=lf
+*.gif binary
 
 # everything else
 * text eol=auto
