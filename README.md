@@ -6,10 +6,6 @@ from the steps involved: ***T***hompson's construction, ***su***bset
 construction, and ***quo***tient construction.
 
 
-# Demo
-![Tsuquo Demo](demo/demo.gif)
-
-
 # Supported Regexes
 
 Currently, tsuquo can support the following:
@@ -23,10 +19,10 @@ Currently, tsuquo can support the following:
   * To match `-` in a range, put it as the first character, e.g. `[-abc]`
 
 Tsuquo **cannot** support the following:
-* Wildcard `.` (almost)
+* Wildcard `.`
   * It SOMETIMES works, but it may crash the program. Try at your own risk.
-* Negation `[^a]`
-* Beginning/end of line `^abc$`
+* Negation `^`
+
 
 # Building
 
