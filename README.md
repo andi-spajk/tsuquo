@@ -6,6 +6,10 @@ from the steps involved: ***T***hompson's construction, ***su***bset
 construction, and ***quo***tient construction.
 
 
+# Demo
+![Tsuquo Demo](demo/demo.gif)
+
+
 # Supported Regexes
 
 Currently, tsuquo can support the following:
